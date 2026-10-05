@@ -6,7 +6,10 @@
 <title>Kampagnenregie</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* layout: top bar (ident/status) -> collapsible settings -> skill rack (left) + workspace (right) -> bottom agent-trace ticker */
+html,body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+/* layout: top bar (ident/status) -> collapsible settings/brand panels -> skill rack (left) + workspace (right) -> bottom agent-trace ticker */
 :root{
   --bg:#f3f4f6; --panel:#ffffff; --panel-2:#eceef1; --line:#d9dce1;
   --fg:#15181d; --fg-dim:#5c6672;
@@ -37,9 +40,6 @@
   color-scheme: dark;
 }
 *{box-sizing:border-box}
-html,body{margin:0}
-[hidden]{display:none!important}
-img{max-width:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-body);padding-inline:16px}
 .app{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding-block:18px 28px}
 h1,h2,h3{font-family:var(--font-display);font-weight:600;text-wrap:balance;margin:0}
@@ -56,7 +56,8 @@ button{font-family:var(--font-body);cursor:pointer}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 .topbar-actions{display:flex;align-items:center;gap:10px}
 .status-text{font-family:var(--font-mono);font-size:.78rem;color:var(--fg-dim)}
-.icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-size:1rem;display:flex;align-items:center;justify-content:center}
+.icon-btn{height:38px;min-width:38px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-size:1rem;display:flex;align-items:center;justify-content:center;gap:0}
+.icon-btn.text{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.04em}
 .icon-btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--c-plan);outline-offset:2px}
 
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}
@@ -72,15 +73,20 @@ button{font-family:var(--font-body);cursor:pointer}
 .settings-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .btn{border:none;border-radius:9px;padding:10px 16px;font-size:.88rem;font-weight:500;background:var(--accent);color:var(--accent-ink)}
 .btn.secondary{background:var(--panel-2);color:var(--fg);border:1px solid var(--line)}
+.btn.small{padding:6px 12px;font-size:.78rem}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .save-note{font-size:.76rem;color:var(--good);font-family:var(--font-mono)}
+.inline-add{display:flex;gap:8px}
+.inline-add input{flex:1;min-width:0}
 
 .layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px}
 @media (max-width:760px){.layout{grid-template-columns:1fr}}
-.skills{padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.skills{padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .skills h2{font-size:.85rem;color:var(--fg-dim);font-family:var(--font-mono);letter-spacing:.06em;text-transform:uppercase}
-.skill-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.skill-grid{display:grid;grid-template-columns:1fr;gap:6px}
 @media (max-width:760px){.skill-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+.skill-group-label{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.07em;text-transform:uppercase;color:var(--cat,var(--fg-dim));margin:8px 0 -1px;padding-left:2px}
+.skill-group-label:first-child{margin-top:0}
 .skill-card{display:flex;align-items:center;gap:10px;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:var(--fg)}
 .skill-card.active{border-color:var(--cat,var(--accent));box-shadow:inset 3px 0 0 var(--cat,var(--accent))}
 .channel-badge{font-family:var(--font-mono);font-size:.68rem;font-weight:500;letter-spacing:.04em;color:var(--cat,var(--fg-dim));border:1px solid var(--cat,var(--line));border-radius:6px;padding:3px 6px;flex-shrink:0}
@@ -92,6 +98,14 @@ button{font-family:var(--font-body);cursor:pointer}
 .ws-head h3{font-size:1.15rem}
 .ws-cat{font-family:var(--font-mono);font-size:.72rem;color:var(--cat);border:1px solid var(--cat);border-radius:999px;padding:2px 10px}
 .ws-desc{color:var(--fg-dim);font-size:.88rem;margin-top:-6px}
+.ws-editor-toggle{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ws-version-badge{font-family:var(--font-mono);font-size:.72rem;color:var(--fg-dim);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+.skill-editor{display:flex;flex-direction:column;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px}
+.skill-editor label{font-size:.76rem;color:var(--fg-dim);font-family:var(--font-mono)}
+.skill-editor textarea{width:100%;min-height:120px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-family:var(--font-mono);font-size:.84rem;resize:vertical}
+.version-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-family:var(--font-mono);font-size:.8rem;max-height:160px;overflow-y:auto}
+.version-list li{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--fg-dim)}
+.version-list li.current{border-color:var(--accent);color:var(--fg)}
 .form-fields{display:flex;flex-direction:column;gap:12px}
 .field textarea{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);font-size:.9rem;font-family:var(--font-body);min-height:72px;resize:vertical;min-width:0}
 .ws-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -112,9 +126,9 @@ button{font-family:var(--font-body);cursor:pointer}
 .trace-log li.now{color:var(--fg);border-left-color:var(--accent)}
 .trace-log li.err{color:var(--danger);border-left-color:var(--danger)}
 </style>
+
 </head>
 <body>
-
 <div class="app">
   <header class="topbar">
     <div class="brand">
@@ -123,9 +137,39 @@ button{font-family:var(--font-body);cursor:pointer}
     </div>
     <div class="topbar-actions">
       <span class="status-text" id="statusText">nicht verbunden</span>
+      <button class="icon-btn text" id="brandBtn" aria-label="Markenprofil" aria-expanded="false">MARKE</button>
       <button class="icon-btn" id="settingsBtn" aria-label="Einstellungen" aria-expanded="false">⚙</button>
     </div>
   </header>
+
+  <section class="panel settings" id="brandPanel" hidden>
+    <h2>Markenprofil</h2>
+    <p class="hint">Einmal pro Kunde/Marke ausfüllen. Skills mit Markenbezug (Keywords, Content-Brief, Positionierung, Personas, Kanäle, Playbook) nutzen automatisch das aktive Profil als Kontext.</p>
+    <div class="preset-row" id="brandList"></div>
+    <div class="field-grid">
+      <div class="field"><label for="brandName">Markenname</label><input id="brandName" placeholder="Acme Corp"></div>
+      <div class="field"><label for="brandWebsite">Website</label><input id="brandWebsite" placeholder="https://acme.com"></div>
+      <div class="field"><label for="brandIndustry">Branche</label><input id="brandIndustry" placeholder="B2B SaaS"></div>
+      <div class="field"><label for="brandAudience">Zielgruppe</label><input id="brandAudience" placeholder="SMB HR-Manager, 10-200 Mitarbeitende"></div>
+      <div class="field"><label for="brandProduct">Produkt / Leistung</label><input id="brandProduct" placeholder="HR-Software für kleine Unternehmen"></div>
+      <div class="field"><label for="brandCompetitors">Wettbewerber (Komma-getrennt)</label><input id="brandCompetitors" placeholder="BambooHR, Gusto, Zenefits"></div>
+      <div class="field"><label for="brandUsp">USP / Differenzierung</label><input id="brandUsp" placeholder="15-Minuten-Setup ohne IT-Abteilung"></div>
+    </div>
+    <div class="settings-actions">
+      <button class="btn secondary" id="newBrandBtn" type="button">Neues Profil</button>
+      <button class="btn" id="saveBrandBtn" type="button">Speichern</button>
+      <button class="btn secondary" id="deleteBrandBtn" type="button">Profil löschen</button>
+      <span class="save-note" id="brandSaveNote" hidden>gespeichert</span>
+    </div>
+    <div class="field">
+      <label for="brandNoteInput">Notiz hinzufügen</label>
+      <div class="inline-add">
+        <input id="brandNoteInput" placeholder="z.B. CEO-Call: Fokus auf Mobile-First für Q2">
+        <button class="btn secondary" id="addNoteBtn" type="button">Hinzufügen</button>
+      </div>
+    </div>
+    <ul class="trace-log" id="brandNotes" style="max-height:140px"></ul>
+  </section>
 
   <section class="panel settings" id="settingsPanel" hidden>
     <h2>Verbindung</h2>
@@ -190,6 +234,8 @@ button{font-family:var(--font-body);cursor:pointer}
       hint:"Beliebige OpenAI-kompatible URL eintragen." }
   ];
 
+  // system: Vorlage für die Agenten-Rolle (editierbar/versionierbar). {{feld}} wird durch Eingabewerte ersetzt.
+  // user: baut den Aufgaben-Teil der Nachricht aus den Eingabefeldern (nicht editierbar - reine Verdrahtung).
   var SKILLS = [
     { id:"post", cat:"create", code:"TXT", label:"Social-Media-Post", summary:"Text für einen Kanal entwerfen",
       fields:[
@@ -198,7 +244,7 @@ button{font-family:var(--font-body);cursor:pointer}
         { key:"kanal", label:"Kanal", type:"select", options:["Instagram","LinkedIn","TikTok","X (Twitter)"] },
         { key:"tonfall", label:"Tonfall", type:"select", options:["locker & nahbar","professionell & sachlich","humorvoll & frech"] }
       ],
-      system:function(f){ return "Du bist Social-Media-Texter in einem Marketing-Team. Schreibe einen einzelnen Post für den Kanal "+f.kanal+", Tonfall: "+f.tonfall+". Antworte ausschließlich mit dem fertigen Post-Text inkl. passender Hashtags, ohne Erklärungen davor oder danach."; },
+      system:"Du bist Social-Media-Texter in einem Marketing-Team. Schreibe einen einzelnen Post für den Kanal {{kanal}}, Tonfall: {{tonfall}}. Antworte ausschließlich mit dem fertigen Post-Text inkl. passender Hashtags, ohne Erklärungen davor oder danach.",
       user:function(f){ return "Thema/Produkt: "+f.thema+"\nZielgruppe: "+f.zielgruppe; } },
 
     { id:"plan", cat:"plan", code:"PLN", label:"Kampagnenplan", summary:"Phasen & Meilensteine entwerfen",
@@ -208,44 +254,73 @@ button{font-family:var(--font-body);cursor:pointer}
         { key:"budget", label:"Budgetrahmen", type:"select", options:["sehr knapp (Studierendenprojekt)","mittel","großzügig"] },
         { key:"zielgruppe", label:"Zielgruppe", type:"text", example:"Studierende, 20–26 Jahre" }
       ],
-      system:function(){ return "Du bist Kampagnenplaner. Entwerfe eine strukturierte Grobplanung mit Phasen (Vorbereitung, Launch, laufende Betreuung, Auswertung), passenden Kanälen je Phase und 1-2 Meilensteinen pro Phase. Nutze Markdown-Überschriften (###) pro Phase und Listen für Details."; },
+      system:"Du bist Kampagnenplaner. Entwerfe eine strukturierte Grobplanung mit Phasen (Vorbereitung, Launch, laufende Betreuung, Auswertung), passenden Kanälen je Phase und 1-2 Meilensteinen pro Phase. Nutze Markdown-Überschriften (###) pro Phase und Listen für Details.",
       user:function(f){ return "Kampagnenziel: "+f.ziel+"\nZeitraum: "+f.zeitraum+"\nBudgetrahmen: "+f.budget+"\nZielgruppe: "+f.zielgruppe; } },
 
-    { id:"competitor", cat:"analyze", code:"CMP", label:"Wettbewerbs-Notizen", summary:"Eigene Beobachtungen auswerten",
+    { id:"keywords", cat:"analyze", code:"KEY", label:"Keyword-Empfehlungen", summary:"SEO-Chancen priorisieren", useBrand:true,
+      fields:[ { key:"seitenziel", label:"Seiten-/Kampagnenziel", type:"text", example:"Startseite, Lead-Generierung für KMU" } ],
+      system:"Du bist SEO- und Keyword-Stratege. Du bekommst Markenkontext und ein Seiten- oder Kampagnenziel. Gib 3-5 priorisierte Keyword-Empfehlungen in zwei Gruppen (Primär/Sekundär) mit je einer kurzen Begründung, die sich auf Positionierung und Wettbewerber bezieht. Du hast keinen Zugriff auf echte Suchvolumen-Daten - erfinde keine Zahlen, kennzeichne die Einschätzung als „Reasoning-based”. Nutze Markdown.",
+      user:function(f){ return "Seiten-/Kampagnenziel: "+f.seitenziel; } },
+
+    { id:"brief", cat:"create", code:"BRF", label:"Content-Brief", summary:"Schreibreife Gliederung erzeugen", useBrand:true,
       fields:[
-        { key:"name", label:"Wettbewerber", type:"text", example:"Marke „Flussgold“" },
-        { key:"fokus", label:"Beobachtungsfokus", type:"select", options:["Preise","Content & Tonfall","Kanäle","Positionierung allgemein"] },
-        { key:"notizen", label:"Deine Beobachtungen / Notizen", type:"textarea", example:"Postet täglich auf Instagram, viel UGC, wirkt günstiger positioniert, kaum LinkedIn-Präsenz." }
+        { key:"keyword", label:"Ziel-Keyword", type:"text", example:"hr software für kleine unternehmen" },
+        { key:"format", label:"Format", type:"select", options:["Ratgeber-Artikel","Vergleichsseite","Landingpage","FAQ-Seite"] }
       ],
-      system:function(){ return "Du bist Analyst für Wettbewerbsbeobachtung. Du bekommst rohe, unstrukturierte Notizen zu einem Wettbewerber. Strukturiere sie nach: Positionierung, Stärken, Schwächen, auffällige Content-/Kanalstrategie, und leite 2-3 konkrete Handlungsempfehlungen ab. Nutze Markdown-Überschriften. Erfinde keine Fakten, die nicht in den Notizen stehen - kennzeichne Vermutungen klar als solche."; },
-      user:function(f){ return "Wettbewerber: "+f.name+"\nFokus: "+f.fokus+"\nNotizen:\n"+f.notizen; } },
+      system:"Du bist Content-Stratege. Erstelle aus Markenkontext, Ziel-Keyword und Format einen schreibreifen Content-Brief: Suchintention, empfohlene Wortzahl, H1/H2-Gliederung mit kurzen Hinweisen je Abschnitt, ein Featured-Snippet-Ziel und eine Differenzierungs-Idee gegenüber den genannten Wettbewerbern. Nutze Markdown-Überschriften.",
+      user:function(f){ return "Ziel-Keyword: "+f.keyword+"\nFormat: "+f.format; } },
+
+    { id:"positioning", cat:"plan", code:"POS", label:"Positionierung", summary:"Differenzierung schärfen", useBrand:true,
+      fields:[ { key:"differenzierung", label:"Was könnt ihr behaupten, das Wettbewerber nicht können?", type:"textarea", example:"15-Minuten-Setup ohne IT-Abteilung, transparente Preise ohne „Kontaktieren Sie uns”" } ],
+      system:"Du bist Positionierungs-Stratege. Entwickle aus Markenkontext und der genannten Differenzierung eine Positionierung nach dem Schema FÜR / DIE / IST / DAS / ANDERS ALS / WEIL, ergänzt um 2-3 Proof Points und einen kurzen Messaging-Satz. Nutze Markdown.",
+      user:function(f){ return "Differenzierung laut Team: "+f.differenzierung; } },
+
+    { id:"personas", cat:"plan", code:"PER", label:"Buyer-Persona", summary:"Zielgruppe konkretisieren", useBrand:true,
+      fields:[
+        { key:"evidenz", label:"Woher kommt euer Kundenwissen?", type:"select", options:["Kundeninterviews","Sales-Gespräche","Support-Tickets","Analytics-Daten","Nur Annahmen"] },
+        { key:"notizen", label:"Was wisst ihr über die Zielgruppe? (Stichpunkte)", type:"textarea", example:"Entscheider ist meist HR-Leitung; größter Schmerzpunkt: Onboarding dauert zu lange" }
+      ],
+      system:"Du bist UX-/Marketing-Researcher. Entwickle aus Markenkontext, Evidenzquelle und Notizen genau eine Buyer-Persona: Rolle, 2-3 priorisierte Schmerzpunkte, Ziele, Entscheidungsprozess, sowie Do's/Don'ts für die Ansprache. Wenn die Evidenzquelle „Nur Annahmen” ist, kennzeichne die Persona deutlich als Hypothese, die validiert werden muss. Nutze Markdown.",
+      user:function(f){ return "Evidenzquelle: "+f.evidenz+"\nNotizen zur Zielgruppe:\n"+f.notizen; } },
+
+    { id:"channels", cat:"analyze", code:"CHN", label:"Kanal-Strategie", summary:"Erst optimieren, dann erweitern", useBrand:true,
+      fields:[ { key:"kanaele", label:"Aktuelle Kanäle + grobe Performance", type:"textarea", example:"Google Ads: profitabel. SEO: nicht getrackt. LinkedIn organisch: break-even." } ],
+      system:"Du bist Kanal-Stratege. Bewerte die genannten aktuellen Kanäle nach dem Prinzip „erst optimieren, dann erweitern”. Erstelle eine Tabelle mit Kanal, Status und Empfehlung (SKALIEREN / OPTIMIEREN / TRACKEN / PAUSIEREN), danach eine priorisierte Liste konkreter nächster Schritte. Schlage nur dann einen neuen Kanal vor, wenn alle genannten Kanäle bereits profitabel und getrackt sind. Nutze Markdown.",
+      user:function(f){ return "Aktuelle Kanäle und Performance:\n"+f.kanaele; } },
+
+    { id:"playbook", cat:"plan", code:"PLB", label:"Marketing-Playbook", summary:"Strategie in Aufgaben übersetzen", useBrand:true,
+      fields:[ { key:"strategieinput", label:"Bisherige Strategie-Ergebnisse einfügen (Positionierung/Personas/Kanäle)", type:"textarea", example:"Positionierung: einfachste HR-Plattform für kleine Teams. Kanal-Fokus: SEO tracken, LinkedIn optimieren, Google Ads skalieren." } ],
+      system:"Du bist Marketing-Projektleiter. Verwandle Markenkontext und die gegebenen Strategie-Ergebnisse in einen 90-Tage-Plan mit den Phasen Woche 1-2 (Quick Wins), Woche 3-4 (Fundament), Monat 2 (Wachstum) und Monat 3 (Skalierung). Jede Aufgabe ist konkret und in 5-30 Minuten oder als klar abgegrenzter Block erledigbar. Schließe mit einer einzelnen „Nächste Aktion”. Nutze Markdown mit Checklisten (- [ ]).",
+      user:function(f){ return "Bisherige Strategie-Ergebnisse:\n"+f.strategieinput; } },
 
     { id:"report", cat:"analyze", code:"RPT", label:"Performance-Report", summary:"KPIs zusammenfassen",
       fields:[
         { key:"daten", label:"Rohdaten / KPIs", type:"textarea", example:"Reichweite 12.000 (+8%), CTR 1,4% (-0,2pp), Conversions 86, Ausgaben 340€" },
         { key:"kontext", label:"Kontext / Vergleichszeitraum", type:"text", example:"vs. Vormonat, Instagram-Kampagne" }
       ],
-      system:function(){ return "Du bist Marketing-Analyst. Du bekommst rohe Kennzahlen. Schreibe eine kurze Management-Zusammenfassung (max. 150 Wörter) plus eine Liste mit 2-4 konkreten Handlungsempfehlungen. Nutze Markdown."; },
+      system:"Du bist Marketing-Analyst. Du bekommst rohe Kennzahlen. Schreibe eine kurze Management-Zusammenfassung (max. 150 Wörter) plus eine Liste mit 2-4 konkreten Handlungsempfehlungen. Nutze Markdown.",
       user:function(f){ return "Kennzahlen/Rohdaten:\n"+f.daten+"\nKontext: "+f.kontext; } },
 
-    { id:"brand", cat:"guard", code:"BRD", label:"Markenstimme-Check", summary:"Text gegen Richtlinien prüfen",
+    { id:"voice", cat:"guard", code:"BRD", label:"Markenstimme-Check", summary:"Text gegen Richtlinien prüfen",
       fields:[
         { key:"richtlinien", label:"Markenrichtlinien / Tonfall", type:"textarea", example:"Immer Du-Ansprache, keine Anglizismen, verspielt aber seriös" },
         { key:"text", label:"Text zur Prüfung", type:"textarea", example:"Jetzt shoppen und von unserem exklusiven Launch-Deal profitieren!" }
       ],
-      system:function(){ return "Du bist Lektor für Markenkommunikation. Prüfe den gegebenen Text gegen die beschriebenen Markenrichtlinien. Gib eine kurze Einschätzung (passt / passt mit Einschränkungen / passt nicht) und konkrete Änderungsvorschläge als Liste. Nutze Markdown."; },
+      system:"Du bist Lektor für Markenkommunikation. Prüfe den gegebenen Text gegen die beschriebenen Markenrichtlinien. Gib eine kurze Einschätzung (passt / passt mit Einschränkungen / passt nicht) und konkrete Änderungsvorschläge als Liste. Nutze Markdown.",
       user:function(f){ return "Markenrichtlinien/Tonfall:\n"+f.richtlinien+"\n\nZu prüfender Text:\n"+f.text; } },
 
     { id:"chat", cat:"neutral", code:"CHT", label:"Freie Werkbank", summary:"Direkt mit dem Modell sprechen",
       fields:[ { key:"nachricht", label:"Nachricht", type:"textarea", example:"Gib mir drei Ideen für einen Kampagnennamen für ein nachhaltiges Modelabel." } ],
-      system:function(){ return "Du bist ein hilfreicher Assistent für Marketing- und Medienaufgaben."; },
+      system:"Du bist ein hilfreicher Assistent für Marketing- und Medienaufgaben.",
       user:function(f){ return f.nachricht; } }
   ];
 
-  var CAT_LABEL = { create:"Content", plan:"Planung", analyze:"Analyse", guard:"Markenschutz", neutral:"Werkbank" };
+  var CAT_ORDER = ["create","plan","analyze","guard","neutral"];
+  var CAT_LABEL = { create:"Content", plan:"Planung & Strategie", analyze:"Analyse", guard:"Markenschutz", neutral:"Werkbank" };
 
   var state = { baseUrl:"", apiKey:"", model:"", preset:"hs" };
   var activeSkillId = SKILLS[0].id;
+  var editorOpen = {};
 
   function loadState(){
     try{
@@ -263,19 +338,51 @@ button{font-family:var(--font-body);cursor:pointer}
       state.baseUrl = p.baseUrl;
     }
   }
-
   function saveState(){
     try{ localStorage.setItem("kampagnenregie_config", JSON.stringify(state)); }catch(e){}
+  }
+
+  // -- Markenprofile --
+  var brandState = { brands:[], activeId:null };
+  function loadBrands(){
+    try{
+      var raw = localStorage.getItem("kampagnenregie_brands");
+      if(raw) brandState = JSON.parse(raw);
+    }catch(e){}
+    if(!brandState.brands) brandState.brands = [];
+  }
+  function saveBrands(){
+    try{ localStorage.setItem("kampagnenregie_brands", JSON.stringify(brandState)); }catch(e){}
+  }
+  function getActiveBrand(){
+    return brandState.brands.filter(function(b){ return b.id===brandState.activeId; })[0] || null;
+  }
+  function brandContextText(){
+    var b = getActiveBrand();
+    if(!b) return null;
+    var lines = [
+      "MARKENKONTEXT:",
+      "Name: "+(b.name||"-"),
+      "Website: "+(b.website||"-"),
+      "Branche: "+(b.industry||"-"),
+      "Produkt/Leistung: "+(b.product||"-"),
+      "Zielgruppe: "+(b.audience||"-"),
+      "Wettbewerber: "+(b.competitors||"-"),
+      "USP: "+(b.usp||"-")
+    ];
+    if(b.notes && b.notes.length){
+      lines.push("Notizen:");
+      b.notes.forEach(function(n){ lines.push("- "+n.date+": "+n.text); });
+    }
+    return lines.join("\n");
   }
 
   function escapeHtml(s){
     return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   }
-
   function inlineMd(s){
     return s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>");
   }
-
   function renderLite(text){
     var esc = escapeHtml(text);
     var lines = esc.split(/\n/);
@@ -300,11 +407,18 @@ button{font-family:var(--font-body);cursor:pointer}
     if(inList) html += "</ul>";
     return html;
   }
-
+  function renderTemplate(tmpl, values){
+    return tmpl.replace(/\{\{(\w+)\}\}/g, function(m,k){ return (values[k]!=null && values[k]!=="") ? values[k] : m; });
+  }
   function fmtTime(){
     var d = new Date();
     function pad(n){ return (n<10?"0":"")+n; }
     return pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds());
+  }
+  function fmtDate(){
+    var d = new Date();
+    function pad(n){ return (n<10?"0":"")+n; }
+    return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
   }
 
   var traceLogEl = document.getElementById("traceLog");
@@ -321,7 +435,7 @@ button{font-family:var(--font-body);cursor:pointer}
     traceLogEl.scrollTop = traceLogEl.scrollHeight;
     return li;
   }
-  addTrace("Bereit. Wähle links einen Skill und klicke „Skill ausführen“.");
+  addTrace("Bereit. Wähle links einen Skill und klicke „Skill ausführen”.");
 
   function delay(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
 
@@ -394,11 +508,11 @@ button{font-family:var(--font-body);cursor:pointer}
   function openSettings(open){
     settingsPanel.hidden = !open;
     settingsBtn.setAttribute("aria-expanded", String(open));
+    if(open){ brandPanel.hidden = true; brandBtn.setAttribute("aria-expanded","false"); }
   }
   settingsBtn.addEventListener("click", function(){ openSettings(settingsPanel.hidden); });
 
   var lastModels = [];
-
   function populateModelSelect(models, preferredId){
     lastModels = models;
     modelSelect.innerHTML = "";
@@ -417,7 +531,6 @@ button{font-family:var(--font-body);cursor:pointer}
     });
     modelSelect.value = (preferredId && ids.indexOf(preferredId) !== -1) ? preferredId : ids[0];
   }
-
   async function fetchModels(baseUrl, apiKey){
     var headers = {};
     if(apiKey) headers["Authorization"] = "Bearer "+apiKey;
@@ -426,7 +539,6 @@ button{font-family:var(--font-body);cursor:pointer}
     var data = await res.json();
     return data.data || [];
   }
-
   document.getElementById("loadModelsBtn").addEventListener("click", async function(){
     var btn = this; var original = btn.textContent;
     btn.disabled = true; btn.textContent = "lädt…";
@@ -440,14 +552,12 @@ button{font-family:var(--font-body);cursor:pointer}
     }
     setTimeout(function(){ btn.textContent = original; btn.disabled = false; }, 2200);
   });
-
   modelFilter.addEventListener("input", function(){
     var q = modelFilter.value.trim().toLowerCase();
     Array.prototype.forEach.call(modelSelect.options, function(opt){
       opt.hidden = q !== "" && opt.value && opt.value.toLowerCase().indexOf(q) === -1;
     });
   });
-
   document.getElementById("saveSettingsBtn").addEventListener("click", function(){
     state.baseUrl = baseUrlInput.value.trim();
     state.apiKey = apiKeyInput.value.trim();
@@ -458,21 +568,185 @@ button{font-family:var(--font-body);cursor:pointer}
     checkConnection();
   });
 
+  // -- brand panel --
+  var brandPanel = document.getElementById("brandPanel");
+  var brandBtn = document.getElementById("brandBtn");
+  var brandList = document.getElementById("brandList");
+  var brandNameI = document.getElementById("brandName");
+  var brandWebsiteI = document.getElementById("brandWebsite");
+  var brandIndustryI = document.getElementById("brandIndustry");
+  var brandAudienceI = document.getElementById("brandAudience");
+  var brandProductI = document.getElementById("brandProduct");
+  var brandCompetitorsI = document.getElementById("brandCompetitors");
+  var brandUspI = document.getElementById("brandUsp");
+  var brandSaveNote = document.getElementById("brandSaveNote");
+  var brandNotesEl = document.getElementById("brandNotes");
+  var brandNoteInput = document.getElementById("brandNoteInput");
+
+  function openBrandPanel(open){
+    brandPanel.hidden = !open;
+    brandBtn.setAttribute("aria-expanded", String(open));
+    if(open){ settingsPanel.hidden = true; settingsBtn.setAttribute("aria-expanded","false"); renderBrandList(); fillBrandForm(getActiveBrand()); }
+  }
+  brandBtn.addEventListener("click", function(){ openBrandPanel(brandPanel.hidden); });
+
+  function renderBrandList(){
+    brandList.innerHTML = "";
+    if(!brandState.brands.length){
+      var p = document.createElement("span");
+      p.className = "hint"; p.textContent = "Noch keine Profile – lege unten das erste an.";
+      brandList.appendChild(p);
+      return;
+    }
+    brandState.brands.forEach(function(b){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "preset-btn" + (b.id===brandState.activeId ? " active" : "");
+      btn.textContent = b.name || "(ohne Namen)";
+      btn.addEventListener("click", function(){
+        brandState.activeId = b.id; saveBrands();
+        renderBrandList(); fillBrandForm(b); renderWorkspace();
+      });
+      brandList.appendChild(btn);
+    });
+  }
+  function fillBrandForm(b){
+    brandNameI.value = b ? (b.name||"") : "";
+    brandWebsiteI.value = b ? (b.website||"") : "";
+    brandIndustryI.value = b ? (b.industry||"") : "";
+    brandAudienceI.value = b ? (b.audience||"") : "";
+    brandProductI.value = b ? (b.product||"") : "";
+    brandCompetitorsI.value = b ? (b.competitors||"") : "";
+    brandUspI.value = b ? (b.usp||"") : "";
+    renderBrandNotes(b);
+  }
+  function renderBrandNotes(b){
+    brandNotesEl.innerHTML = "";
+    if(!b || !b.notes || !b.notes.length){
+      var li = document.createElement("li");
+      li.textContent = "Noch keine Notizen.";
+      brandNotesEl.appendChild(li);
+      return;
+    }
+    b.notes.slice().reverse().forEach(function(n){
+      var li = document.createElement("li");
+      var t = document.createElement("span"); t.className="t"; t.textContent = n.date;
+      var msg = document.createElement("span"); msg.textContent = n.text;
+      li.appendChild(t); li.appendChild(msg);
+      brandNotesEl.appendChild(li);
+    });
+  }
+  document.getElementById("newBrandBtn").addEventListener("click", function(){
+    brandState.activeId = null;
+    fillBrandForm(null);
+    renderBrandList();
+    brandNameI.focus();
+  });
+  document.getElementById("saveBrandBtn").addEventListener("click", function(){
+    if(!brandNameI.value.trim()){ brandNameI.focus(); return; }
+    var active = getActiveBrand();
+    if(!active){
+      active = { id: "b"+Date.now(), notes:[], createdAt: fmtDate() };
+      brandState.brands.push(active);
+      brandState.activeId = active.id;
+    }
+    active.name = brandNameI.value.trim();
+    active.website = brandWebsiteI.value.trim();
+    active.industry = brandIndustryI.value.trim();
+    active.audience = brandAudienceI.value.trim();
+    active.product = brandProductI.value.trim();
+    active.competitors = brandCompetitorsI.value.trim();
+    active.usp = brandUspI.value.trim();
+    saveBrands();
+    renderBrandList();
+    brandSaveNote.hidden = false;
+    setTimeout(function(){ brandSaveNote.hidden = true; }, 2000);
+    renderWorkspace();
+  });
+  document.getElementById("deleteBrandBtn").addEventListener("click", function(){
+    var active = getActiveBrand();
+    if(!active) return;
+    brandState.brands = brandState.brands.filter(function(b){ return b.id !== active.id; });
+    brandState.activeId = brandState.brands.length ? brandState.brands[0].id : null;
+    saveBrands();
+    renderBrandList();
+    fillBrandForm(getActiveBrand());
+    renderWorkspace();
+  });
+  document.getElementById("addNoteBtn").addEventListener("click", function(){
+    var active = getActiveBrand();
+    var text = brandNoteInput.value.trim();
+    if(!active || !text) return;
+    active.notes = active.notes || [];
+    active.notes.push({ text: text, date: fmtDate() });
+    saveBrands();
+    brandNoteInput.value = "";
+    renderBrandNotes(active);
+  });
+
+  // -- Skill-Versionierung --
+  var skillVersions = {};
+  function loadSkillVersions(){
+    try{
+      var raw = localStorage.getItem("kampagnenregie_skill_versions");
+      if(raw) skillVersions = JSON.parse(raw);
+    }catch(e){}
+  }
+  function saveSkillVersions(){
+    try{ localStorage.setItem("kampagnenregie_skill_versions", JSON.stringify(skillVersions)); }catch(e){}
+  }
+  function getEffectiveSystem(skill){
+    var sv = skillVersions[skill.id];
+    if(sv && typeof sv.activeIndex === "number" && sv.activeIndex >= 0 && sv.versions[sv.activeIndex]){
+      return sv.versions[sv.activeIndex].text;
+    }
+    return skill.system;
+  }
+  function getVersionLabel(skill){
+    var sv = skillVersions[skill.id];
+    if(!sv || typeof sv.activeIndex !== "number" || sv.activeIndex < 0) return "Original";
+    return "v"+(sv.activeIndex+1)+" von "+sv.versions.length;
+  }
+  function saveNewVersion(skill, text){
+    if(!skillVersions[skill.id]) skillVersions[skill.id] = { versions:[], activeIndex:-1 };
+    skillVersions[skill.id].versions.push({ text:text, savedAt: fmtTime()+" "+fmtDate() });
+    skillVersions[skill.id].activeIndex = skillVersions[skill.id].versions.length - 1;
+    saveSkillVersions();
+  }
+  function activateVersion(skill, idx){
+    if(!skillVersions[skill.id]) return;
+    skillVersions[skill.id].activeIndex = idx;
+    saveSkillVersions();
+  }
+  function resetToDefault(skill){
+    if(skillVersions[skill.id]) skillVersions[skill.id].activeIndex = -1;
+    saveSkillVersions();
+  }
+
   // -- skill rack --
   var skillGrid = document.getElementById("skillGrid");
   var workspace = document.getElementById("workspace");
 
   function renderSkillGrid(){
     skillGrid.innerHTML = "";
-    SKILLS.forEach(function(skill){
-      var card = document.createElement("button");
-      card.type = "button";
-      card.className = "skill-card" + (skill.id === activeSkillId ? " active" : "");
-      card.style.setProperty("--cat", "var(--c-"+skill.cat+")");
-      card.innerHTML = '<span class="channel-badge">'+skill.code+'</span>'+
-        '<span class="skill-name">'+skill.label+'<span class="skill-sub">'+skill.summary+'</span></span>';
-      card.addEventListener("click", function(){ activeSkillId = skill.id; renderSkillGrid(); renderWorkspace(); });
-      skillGrid.appendChild(card);
+    CAT_ORDER.forEach(function(cat){
+      var items = SKILLS.filter(function(s){ return s.cat === cat; });
+      if(!items.length) return;
+      var h = document.createElement("div");
+      h.className = "skill-group-label";
+      h.style.setProperty("--cat", "var(--c-"+cat+")");
+      h.textContent = CAT_LABEL[cat];
+      skillGrid.appendChild(h);
+      items.forEach(function(skill){
+        var card = document.createElement("button");
+        card.type = "button";
+        card.className = "skill-card" + (skill.id === activeSkillId ? " active" : "");
+        card.style.setProperty("--cat", "var(--c-"+skill.cat+")");
+        card.innerHTML = '<span class="channel-badge">'+skill.code+'</span>'+
+          '<span class="skill-name">'+skill.label+'<span class="skill-sub">'+skill.summary+'</span></span>';
+        card.addEventListener("click", function(){ activeSkillId = skill.id; renderSkillGrid(); renderWorkspace(); });
+        skillGrid.appendChild(card);
+      });
     });
   }
 
@@ -488,9 +762,102 @@ button{font-family:var(--font-body);cursor:pointer}
     workspace.appendChild(head);
 
     var desc = document.createElement("p");
-    desc.className = "ws-desc"; desc.textContent = skill.summary+".";
+    desc.className = "ws-desc";
+    desc.textContent = skill.summary + (skill.useBrand ? " · nutzt aktives Markenprofil." : ".");
     workspace.appendChild(desc);
 
+    if(skill.useBrand){
+      var activeBrand = getActiveBrand();
+      var brandNote = document.createElement("p");
+      brandNote.className = "hint";
+      brandNote.textContent = activeBrand
+        ? "Aktives Markenprofil: " + activeBrand.name
+        : "Kein Markenprofil aktiv – bitte oben über „MARKE” eines anlegen, sonst kann dieser Skill nicht ausgeführt werden.";
+      workspace.appendChild(brandNote);
+    }
+
+    // -- Prompt-Editor (editierbar & versioniert) --
+    var editorToggleRow = document.createElement("div");
+    editorToggleRow.className = "ws-editor-toggle";
+    var badge = document.createElement("span");
+    badge.className = "ws-version-badge";
+    badge.textContent = getVersionLabel(skill);
+    var toggleBtn = document.createElement("button");
+    toggleBtn.type = "button"; toggleBtn.className = "btn secondary small";
+    toggleBtn.textContent = editorOpen[skill.id] ? "Prompt-Editor schließen" : "Prompt bearbeiten";
+    editorToggleRow.appendChild(badge);
+    editorToggleRow.appendChild(toggleBtn);
+    workspace.appendChild(editorToggleRow);
+
+    var editorBox = document.createElement("div");
+    editorBox.className = "skill-editor";
+    editorBox.hidden = !editorOpen[skill.id];
+    var editorLabel = document.createElement("label");
+    editorLabel.textContent = "System-Prompt (Rolle des Agenten) – {{feld}} wird beim Ausführen ersetzt";
+    var promptTA = document.createElement("textarea");
+    promptTA.value = getEffectiveSystem(skill);
+    var editorActions = document.createElement("div");
+    editorActions.className = "settings-actions";
+    var saveVerBtn = document.createElement("button");
+    saveVerBtn.type="button"; saveVerBtn.className="btn small"; saveVerBtn.textContent="Als neue Version speichern";
+    var resetBtn = document.createElement("button");
+    resetBtn.type="button"; resetBtn.className="btn secondary small"; resetBtn.textContent="Zurück zu Original";
+    var histBtn = document.createElement("button");
+    histBtn.type="button"; histBtn.className="btn secondary small";
+    var sv = skillVersions[skill.id];
+    var histCount = sv && sv.versions ? sv.versions.length : 0;
+    histBtn.textContent = "Verlauf ("+histCount+")";
+    editorActions.appendChild(saveVerBtn); editorActions.appendChild(resetBtn); editorActions.appendChild(histBtn);
+    var historyList = document.createElement("ul");
+    historyList.className = "version-list"; historyList.hidden = true;
+    editorBox.appendChild(editorLabel);
+    editorBox.appendChild(promptTA);
+    editorBox.appendChild(editorActions);
+    editorBox.appendChild(historyList);
+    workspace.appendChild(editorBox);
+
+    toggleBtn.addEventListener("click", function(){
+      editorOpen[skill.id] = !editorOpen[skill.id];
+      renderWorkspace();
+    });
+    saveVerBtn.addEventListener("click", function(){
+      saveNewVersion(skill, promptTA.value);
+      addTrace('Neue Prompt-Version für "'+skill.label+'" gespeichert ('+getVersionLabel(skill)+').');
+      renderWorkspace();
+    });
+    resetBtn.addEventListener("click", function(){
+      resetToDefault(skill);
+      addTrace('Prompt für "'+skill.label+'" auf Original zurückgesetzt.');
+      renderWorkspace();
+    });
+    histBtn.addEventListener("click", function(){
+      historyList.hidden = !historyList.hidden;
+      if(historyList.hidden) return;
+      historyList.innerHTML = "";
+      var origLi = document.createElement("li");
+      origLi.className = (!sv || sv.activeIndex < 0) ? "current" : "";
+      origLi.innerHTML = "<span>Original (Standard)</span>";
+      var origBtn = document.createElement("button");
+      origBtn.type="button"; origBtn.className="btn secondary small"; origBtn.textContent="Aktivieren";
+      origBtn.addEventListener("click", function(){ resetToDefault(skill); renderWorkspace(); });
+      origLi.appendChild(origBtn);
+      historyList.appendChild(origLi);
+      if(sv && sv.versions){
+        sv.versions.forEach(function(v, idx){
+          var li = document.createElement("li");
+          li.className = (sv.activeIndex===idx) ? "current" : "";
+          var label = document.createElement("span"); label.textContent = "v"+(idx+1)+" · "+v.savedAt;
+          li.appendChild(label);
+          var actBtn = document.createElement("button");
+          actBtn.type="button"; actBtn.className="btn secondary small"; actBtn.textContent="Aktivieren";
+          actBtn.addEventListener("click", function(){ activateVersion(skill, idx); renderWorkspace(); });
+          li.appendChild(actBtn);
+          historyList.appendChild(li);
+        });
+      }
+    });
+
+    // -- Eingabefelder --
     var formFields = document.createElement("div");
     formFields.className = "form-fields";
     var values = {};
@@ -532,14 +899,23 @@ button{font-family:var(--font-body);cursor:pointer}
     output.textContent = "Noch keine Ausgabe. Felder oben sind mit Beispielwerten vorausgefüllt – einfach anpassen und ausführen.";
     workspace.appendChild(output);
 
-    runBtn.addEventListener("click", function(){ runSkill(skill, values, output, runBtn); });
+    runBtn.addEventListener("click", function(){ runSkill(skill, values, promptTA.value, output, runBtn); });
   }
 
-  async function runSkill(skill, values, output, runBtn){
+  async function runSkill(skill, values, editedPrompt, output, runBtn){
     if(!state.baseUrl || !state.model){
       openSettings(true);
       addTrace("Abgebrochen: Endpunkt-URL oder Modell fehlt. Bitte Einstellungen ausfüllen.", "err");
       return;
+    }
+    var ctx = null;
+    if(skill.useBrand){
+      ctx = brandContextText();
+      if(!ctx){
+        openBrandPanel(true);
+        addTrace("Abgebrochen: Kein aktives Markenprofil. Bitte zuerst eines anlegen.", "err");
+        return;
+      }
     }
     clearTrace();
     runBtn.disabled = true;
@@ -547,11 +923,12 @@ button{font-family:var(--font-body);cursor:pointer}
     output.innerHTML = "";
     setStatus("live", "Anfrage läuft…");
 
-    addTrace('Skill erkannt: "'+skill.label+'"');
+    addTrace('Skill erkannt: "'+skill.label+'" ('+getVersionLabel(skill)+')');
     await delay(220);
-    var sys = skill.system(values);
-    var usr = skill.user(values);
-    addTrace("System-Prompt vorbereitet ("+sys.length+" Zeichen)");
+    var sysTemplate = editedPrompt != null ? editedPrompt : getEffectiveSystem(skill);
+    var sys = renderTemplate(sysTemplate, values);
+    var usr = (ctx ? ctx+"\n\n" : "") + skill.user(values);
+    addTrace("System-Prompt vorbereitet ("+sys.length+" Zeichen)" + (ctx ? " inkl. Markenkontext" : ""));
     await delay(220);
     addTrace("Anfrage an Modell gesendet → "+state.model);
 
@@ -570,6 +947,9 @@ button{font-family:var(--font-body);cursor:pointer}
 
   // -- init --
   loadState();
+  loadBrands();
+  loadSkillVersions();
+  if(!brandState.activeId && brandState.brands.length) brandState.activeId = brandState.brands[0].id;
   baseUrlInput.value = state.baseUrl;
   apiKeyInput.value = state.apiKey;
   if(state.model){
