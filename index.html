@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kampagnenregie</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* layout: top bar (ident/status) -> collapsible settings -> skill rack (left) + workspace (right) -> bottom agent-trace ticker */
+:root{
+  --bg:#f3f4f6; --panel:#ffffff; --panel-2:#eceef1; --line:#d9dce1;
+  --fg:#15181d; --fg-dim:#5c6672;
+  --accent:#b5790a; --accent-ink:#fff8ea;
+  --c-create:#b5790a; --c-plan:#2458b3; --c-analyze:#157a6e; --c-guard:#a6305a; --c-neutral:#5c6672;
+  --live:#c23b2e; --good:#1f8f66; --danger:#c23b2e;
+  --font-display:'Fraunces', 'Iowan Old Style', serif;
+  --font-body:'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono:'JetBrains Mono', ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151b; --panel:#171c24; --panel-2:#1e2430; --line:#2b323e;
+    --fg:#edf0f4; --fg-dim:#9aa5b3;
+    --accent:#e2a63d; --accent-ink:#1c1304;
+    --c-create:#e2a63d; --c-plan:#6ea0ff; --c-analyze:#4bc7b4; --c-guard:#e573a0; --c-neutral:#9aa5b3;
+    --live:#ff6b5b; --good:#4fd49b; --danger:#ff6b5b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151b; --panel:#171c24; --panel-2:#1e2430; --line:#2b323e;
+  --fg:#edf0f4; --fg-dim:#9aa5b3;
+  --accent:#e2a63d; --accent-ink:#1c1304;
+  --c-create:#e2a63d; --c-plan:#6ea0ff; --c-analyze:#4bc7b4; --c-guard:#e573a0; --c-neutral:#9aa5b3;
+  --live:#ff6b5b; --good:#4fd49b; --danger:#ff6b5b;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);padding-inline:16px}
+.app{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding-block:18px 28px}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;text-wrap:balance;margin:0}
+a{color:var(--c-plan)}
+button{font-family:var(--font-body);cursor:pointer}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:1.5rem;letter-spacing:.2px}
+.tally-dot{width:11px;height:11px;border-radius:50%;background:var(--fg-dim);box-shadow:0 0 0 3px color-mix(in srgb, var(--fg-dim) 20%, transparent);transition:background .2s,box-shadow .2s}
+.tally-dot.ok{background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent)}
+.tally-dot.live{background:var(--live);box-shadow:0 0 0 4px color-mix(in srgb, var(--live) 30%, transparent);animation:pulse 1.1s ease-in-out infinite}
+.tally-dot.err{background:var(--danger)}
+@media (prefers-reduced-motion: reduce){.tally-dot.live{animation:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.topbar-actions{display:flex;align-items:center;gap:10px}
+.status-text{font-family:var(--font-mono);font-size:.78rem;color:var(--fg-dim)}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-size:1rem;display:flex;align-items:center;justify-content:center}
+.icon-btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--c-plan);outline-offset:2px}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.settings{padding:16px;display:flex;flex-direction:column;gap:14px}
+.settings h2{font-size:1rem}
+.preset-row{display:flex;gap:8px;flex-wrap:wrap}
+.preset-btn{border:1px solid var(--line);background:var(--panel-2);color:var(--fg);border-radius:999px;padding:7px 14px;font-size:.82rem}
+.preset-btn.active{border-color:var(--accent);color:var(--accent)}
+.field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.field label{display:block;font-size:.76rem;color:var(--fg-dim);margin-bottom:4px;font-family:var(--font-mono)}
+.field input,.field select{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);font-size:.9rem;min-width:0}
+.hint{font-size:.78rem;color:var(--fg-dim);line-height:1.5}
+.settings-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn{border:none;border-radius:9px;padding:10px 16px;font-size:.88rem;font-weight:500;background:var(--accent);color:var(--accent-ink)}
+.btn.secondary{background:var(--panel-2);color:var(--fg);border:1px solid var(--line)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.save-note{font-size:.76rem;color:var(--good);font-family:var(--font-mono)}
+
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px}
+@media (max-width:760px){.layout{grid-template-columns:1fr}}
+.skills{padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.skills h2{font-size:.85rem;color:var(--fg-dim);font-family:var(--font-mono);letter-spacing:.06em;text-transform:uppercase}
+.skill-grid{display:grid;grid-template-columns:1fr;gap:8px}
+@media (max-width:760px){.skill-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+.skill-card{display:flex;align-items:center;gap:10px;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:var(--fg)}
+.skill-card.active{border-color:var(--cat,var(--accent));box-shadow:inset 3px 0 0 var(--cat,var(--accent))}
+.channel-badge{font-family:var(--font-mono);font-size:.68rem;font-weight:500;letter-spacing:.04em;color:var(--cat,var(--fg-dim));border:1px solid var(--cat,var(--line));border-radius:6px;padding:3px 6px;flex-shrink:0}
+.skill-name{font-size:.86rem;line-height:1.25;min-width:0}
+.skill-sub{display:block;font-size:.72rem;color:var(--fg-dim);margin-top:1px}
+
+.workspace{padding:16px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.ws-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ws-head h3{font-size:1.15rem}
+.ws-cat{font-family:var(--font-mono);font-size:.72rem;color:var(--cat);border:1px solid var(--cat);border-radius:999px;padding:2px 10px}
+.ws-desc{color:var(--fg-dim);font-size:.88rem;margin-top:-6px}
+.form-fields{display:flex;flex-direction:column;gap:12px}
+.field textarea{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);font-size:.9rem;font-family:var(--font-body);min-height:72px;resize:vertical;min-width:0}
+.ws-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.output{border-top:1px dashed var(--line);padding-top:12px;min-height:40px}
+.output.empty{color:var(--fg-dim);font-size:.86rem;font-family:var(--font-mono)}
+.out-h{font-family:var(--font-display);margin:14px 0 6px;font-size:1.05rem}
+.output p{margin:0 0 10px;line-height:1.55;font-size:.92rem}
+.out-list{margin:0 0 10px;padding-left:1.2em;line-height:1.55;font-size:.92rem}
+.output .error{color:var(--danger);font-family:var(--font-mono);font-size:.84rem}
+
+.trace{padding:14px 16px 16px}
+.trace-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.trace h2{font-size:.85rem;color:var(--fg-dim);font-family:var(--font-mono);letter-spacing:.06em;text-transform:uppercase}
+.trace-legend{font-size:.76rem;color:var(--fg-dim);max-width:52ch;line-height:1.5}
+.trace-log{list-style:none;margin:10px 0 0;padding:0;font-family:var(--font-mono);font-size:.82rem;display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto}
+.trace-log li{display:flex;gap:10px;color:var(--fg-dim);border-left:2px solid var(--line);padding-left:10px}
+.trace-log li .t{color:var(--fg-dim);flex-shrink:0;opacity:.7}
+.trace-log li.now{color:var(--fg);border-left-color:var(--accent)}
+.trace-log li.err{color:var(--danger);border-left-color:var(--danger)}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="tally-dot" id="statusDot" aria-hidden="true"></span>
+      <h1>Kampagnenregie</h1>
+    </div>
+    <div class="topbar-actions">
+      <span class="status-text" id="statusText">nicht verbunden</span>
+      <button class="icon-btn" id="settingsBtn" aria-label="Einstellungen" aria-expanded="false">⚙</button>
+    </div>
+  </header>
+
+  <section class="panel settings" id="settingsPanel" hidden>
+    <h2>Verbindung</h2>
+    <div class="preset-row" id="presetRow"></div>
+    <div class="field-grid">
+      <div class="field">
+        <label for="baseUrlInput">Endpunkt-URL (OpenAI-kompatibel)</label>
+        <input id="baseUrlInput" type="text" placeholder="https://api.ai.rh-koeln.de">
+      </div>
+      <div class="field">
+        <label for="apiKeyInput">API-Key (nur in diesem Browser gespeichert)</label>
+        <input id="apiKeyInput" type="password" placeholder="Bearer-Token">
+      </div>
+      <div class="field">
+        <label for="modelFilter">Modell suchen</label>
+        <input id="modelFilter" type="text" placeholder="Modell filtern…" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="modelSelect">Modell</label>
+        <select id="modelSelect"><option value="">– zuerst „Modelle laden“ klicken –</option></select>
+      </div>
+    </div>
+    <p class="hint" id="presetHint"></p>
+    <div class="settings-actions">
+      <button class="btn secondary" id="loadModelsBtn" type="button">Modelle laden</button>
+      <button class="btn" id="saveSettingsBtn" type="button">Speichern &amp; verbinden</button>
+      <span class="save-note" id="saveNote" hidden>gespeichert</span>
+    </div>
+    <p class="hint">Der Key verlässt diesen Browser nur Richtung der eingetragenen Endpunkt-URL. Auf einem gemeinsam genutzten Rechner danach besser wieder löschen.</p>
+  </section>
+
+  <main class="layout">
+    <aside class="panel skills">
+      <h2>Skills</h2>
+      <div class="skill-grid" id="skillGrid"></div>
+    </aside>
+
+    <section class="panel workspace" id="workspace"></section>
+  </main>
+
+  <section class="panel trace">
+    <div class="trace-head">
+      <h2>Agenten-Protokoll</h2>
+      <p class="trace-legend">Jeder Skill ist eine fertige Rolle (System-Prompt) für das Modell. Hier siehst du, wie der Agent einen Skill wählt, daraus eine Anfrage baut und ans Modell schickt.</p>
+    </div>
+    <ol class="trace-log" id="traceLog"></ol>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var PRESETS = [
+    { id:"hs", label:"Hochschul-API", baseUrl:"https://api.ai.rh-koeln.de", needsKey:true,
+      hint:"Trage deinen persönlichen API-Key der Hochschule ein. Modellnamen über „Modelle laden“ abrufen." },
+    { id:"ollama", label:"Ollama (lokal/Netzwerk)", baseUrl:"http://localhost:11434/v1", needsKey:false,
+      hint:"Ollama muss mit gesetzter Umgebungsvariable OLLAMA_ORIGINS=* gestartet sein, sonst blockiert der Browser die Anfrage (CORS). Vom iPad aus: IP des Rechners im WLAN verwenden, z.B. http://192.168.1.23:11434/v1." },
+    { id:"lmstudio", label:"LM Studio (lokal/Netzwerk)", baseUrl:"http://localhost:1234/v1", needsKey:false,
+      hint:"Im LM Studio Server-Tab „Local Server“ starten und CORS aktivieren. Vom iPad aus die Netzwerk-IP des Rechners statt localhost verwenden." },
+    { id:"custom", label:"Eigener Endpunkt", baseUrl:"", needsKey:true,
+      hint:"Beliebige OpenAI-kompatible URL eintragen." }
+  ];
+
+  var SKILLS = [
+    { id:"post", cat:"create", code:"TXT", label:"Social-Media-Post", summary:"Text für einen Kanal entwerfen",
+      fields:[
+        { key:"thema", label:"Thema / Produkt", type:"textarea", example:"Launch unserer neuen Bio-Limonade „Quell“" },
+        { key:"zielgruppe", label:"Zielgruppe", type:"text", example:"18–28 Jahre, umweltbewusst, urban" },
+        { key:"kanal", label:"Kanal", type:"select", options:["Instagram","LinkedIn","TikTok","X (Twitter)"] },
+        { key:"tonfall", label:"Tonfall", type:"select", options:["locker & nahbar","professionell & sachlich","humorvoll & frech"] }
+      ],
+      system:function(f){ return "Du bist Social-Media-Texter in einem Marketing-Team. Schreibe einen einzelnen Post für den Kanal "+f.kanal+", Tonfall: "+f.tonfall+". Antworte ausschließlich mit dem fertigen Post-Text inkl. passender Hashtags, ohne Erklärungen davor oder danach."; },
+      user:function(f){ return "Thema/Produkt: "+f.thema+"\nZielgruppe: "+f.zielgruppe; } },
+
+    { id:"plan", cat:"plan", code:"PLN", label:"Kampagnenplan", summary:"Phasen & Meilensteine entwerfen",
+      fields:[
+        { key:"ziel", label:"Kampagnenziel", type:"text", example:"Markenbekanntheit bei Studierenden steigern" },
+        { key:"zeitraum", label:"Zeitraum", type:"text", example:"6 Wochen, Start im April" },
+        { key:"budget", label:"Budgetrahmen", type:"select", options:["sehr knapp (Studierendenprojekt)","mittel","großzügig"] },
+        { key:"zielgruppe", label:"Zielgruppe", type:"text", example:"Studierende, 20–26 Jahre" }
+      ],
+      system:function(){ return "Du bist Kampagnenplaner. Entwerfe eine strukturierte Grobplanung mit Phasen (Vorbereitung, Launch, laufende Betreuung, Auswertung), passenden Kanälen je Phase und 1-2 Meilensteinen pro Phase. Nutze Markdown-Überschriften (###) pro Phase und Listen für Details."; },
+      user:function(f){ return "Kampagnenziel: "+f.ziel+"\nZeitraum: "+f.zeitraum+"\nBudgetrahmen: "+f.budget+"\nZielgruppe: "+f.zielgruppe; } },
+
+    { id:"competitor", cat:"analyze", code:"CMP", label:"Wettbewerbs-Notizen", summary:"Eigene Beobachtungen auswerten",
+      fields:[
+        { key:"name", label:"Wettbewerber", type:"text", example:"Marke „Flussgold“" },
+        { key:"fokus", label:"Beobachtungsfokus", type:"select", options:["Preise","Content & Tonfall","Kanäle","Positionierung allgemein"] },
+        { key:"notizen", label:"Deine Beobachtungen / Notizen", type:"textarea", example:"Postet täglich auf Instagram, viel UGC, wirkt günstiger positioniert, kaum LinkedIn-Präsenz." }
+      ],
+      system:function(){ return "Du bist Analyst für Wettbewerbsbeobachtung. Du bekommst rohe, unstrukturierte Notizen zu einem Wettbewerber. Strukturiere sie nach: Positionierung, Stärken, Schwächen, auffällige Content-/Kanalstrategie, und leite 2-3 konkrete Handlungsempfehlungen ab. Nutze Markdown-Überschriften. Erfinde keine Fakten, die nicht in den Notizen stehen - kennzeichne Vermutungen klar als solche."; },
+      user:function(f){ return "Wettbewerber: "+f.name+"\nFokus: "+f.fokus+"\nNotizen:\n"+f.notizen; } },
+
+    { id:"report", cat:"analyze", code:"RPT", label:"Performance-Report", summary:"KPIs zusammenfassen",
+      fields:[
+        { key:"daten", label:"Rohdaten / KPIs", type:"textarea", example:"Reichweite 12.000 (+8%), CTR 1,4% (-0,2pp), Conversions 86, Ausgaben 340€" },
+        { key:"kontext", label:"Kontext / Vergleichszeitraum", type:"text", example:"vs. Vormonat, Instagram-Kampagne" }
+      ],
+      system:function(){ return "Du bist Marketing-Analyst. Du bekommst rohe Kennzahlen. Schreibe eine kurze Management-Zusammenfassung (max. 150 Wörter) plus eine Liste mit 2-4 konkreten Handlungsempfehlungen. Nutze Markdown."; },
+      user:function(f){ return "Kennzahlen/Rohdaten:\n"+f.daten+"\nKontext: "+f.kontext; } },
+
+    { id:"brand", cat:"guard", code:"BRD", label:"Markenstimme-Check", summary:"Text gegen Richtlinien prüfen",
+      fields:[
+        { key:"richtlinien", label:"Markenrichtlinien / Tonfall", type:"textarea", example:"Immer Du-Ansprache, keine Anglizismen, verspielt aber seriös" },
+        { key:"text", label:"Text zur Prüfung", type:"textarea", example:"Jetzt shoppen und von unserem exklusiven Launch-Deal profitieren!" }
+      ],
+      system:function(){ return "Du bist Lektor für Markenkommunikation. Prüfe den gegebenen Text gegen die beschriebenen Markenrichtlinien. Gib eine kurze Einschätzung (passt / passt mit Einschränkungen / passt nicht) und konkrete Änderungsvorschläge als Liste. Nutze Markdown."; },
+      user:function(f){ return "Markenrichtlinien/Tonfall:\n"+f.richtlinien+"\n\nZu prüfender Text:\n"+f.text; } },
+
+    { id:"chat", cat:"neutral", code:"CHT", label:"Freie Werkbank", summary:"Direkt mit dem Modell sprechen",
+      fields:[ { key:"nachricht", label:"Nachricht", type:"textarea", example:"Gib mir drei Ideen für einen Kampagnennamen für ein nachhaltiges Modelabel." } ],
+      system:function(){ return "Du bist ein hilfreicher Assistent für Marketing- und Medienaufgaben."; },
+      user:function(f){ return f.nachricht; } }
+  ];
+
+  var CAT_LABEL = { create:"Content", plan:"Planung", analyze:"Analyse", guard:"Markenschutz", neutral:"Werkbank" };
+
+  var state = { baseUrl:"", apiKey:"", model:"", preset:"hs" };
+  var activeSkillId = SKILLS[0].id;
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem("kampagnenregie_config");
+      if(raw){
+        var saved = JSON.parse(raw);
+        state.baseUrl = saved.baseUrl || "";
+        state.apiKey = saved.apiKey || "";
+        state.model = saved.model || "";
+        state.preset = saved.preset || "hs";
+      }
+    }catch(e){}
+    if(!state.baseUrl){
+      var p = PRESETS.filter(function(p){return p.id===state.preset;})[0] || PRESETS[0];
+      state.baseUrl = p.baseUrl;
+    }
+  }
+
+  function saveState(){
+    try{ localStorage.setItem("kampagnenregie_config", JSON.stringify(state)); }catch(e){}
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function inlineMd(s){
+    return s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>");
+  }
+
+  function renderLite(text){
+    var esc = escapeHtml(text);
+    var lines = esc.split(/\n/);
+    var html = ""; var inList = false;
+    for(var i=0;i<lines.length;i++){
+      var line = lines[i].trim();
+      var hMatch = line.match(/^(#{1,3})\s+(.*)/);
+      if(hMatch){
+        if(inList){ html += "</ul>"; inList=false; }
+        var level = hMatch[1].length + 2;
+        html += "<h"+level+" class=\"out-h\">"+inlineMd(hMatch[2])+"</h"+level+">";
+      } else if(/^[-*]\s+/.test(line)){
+        if(!inList){ html += "<ul class=\"out-list\">"; inList=true; }
+        html += "<li>"+inlineMd(line.replace(/^[-*]\s+/,""))+"</li>";
+      } else if(line===""){
+        if(inList){ html += "</ul>"; inList=false; }
+      } else {
+        if(inList){ html += "</ul>"; inList=false; }
+        html += "<p>"+inlineMd(line)+"</p>";
+      }
+    }
+    if(inList) html += "</ul>";
+    return html;
+  }
+
+  function fmtTime(){
+    var d = new Date();
+    function pad(n){ return (n<10?"0":"")+n; }
+    return pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds());
+  }
+
+  var traceLogEl = document.getElementById("traceLog");
+  function clearTrace(){ traceLogEl.innerHTML = ""; }
+  function addTrace(text, kind){
+    var li = document.createElement("li");
+    if(kind) li.className = kind;
+    var t = document.createElement("span");
+    t.className = "t"; t.textContent = fmtTime();
+    var msg = document.createElement("span");
+    msg.textContent = text;
+    li.appendChild(t); li.appendChild(msg);
+    traceLogEl.appendChild(li);
+    traceLogEl.scrollTop = traceLogEl.scrollHeight;
+    return li;
+  }
+  addTrace("Bereit. Wähle links einen Skill und klicke „Skill ausführen“.");
+
+  function delay(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+
+  var statusDot = document.getElementById("statusDot");
+  var statusText = document.getElementById("statusText");
+  function setStatus(kind, text){
+    statusDot.className = "tally-dot" + (kind ? " "+kind : "");
+    statusText.textContent = text;
+  }
+
+  async function checkConnection(){
+    if(!state.baseUrl || !state.model){ setStatus("", "nicht konfiguriert"); return; }
+    setStatus("", "prüfe Verbindung…");
+    try{
+      var headers = {};
+      if(state.apiKey) headers["Authorization"] = "Bearer "+state.apiKey;
+      var res = await fetch(state.baseUrl.replace(/\/$/,"")+"/v1/models", { headers: headers });
+      if(res.ok){ setStatus("ok", "verbunden · "+state.model); }
+      else { setStatus("err", "Fehler: HTTP "+res.status); }
+    }catch(e){ setStatus("err", "nicht erreichbar"); }
+  }
+
+  async function callChat(system, user){
+    var headers = { "Content-Type":"application/json" };
+    if(state.apiKey) headers["Authorization"] = "Bearer "+state.apiKey;
+    var res = await fetch(state.baseUrl.replace(/\/$/,"")+"/v1/chat/completions", {
+      method:"POST", headers: headers,
+      body: JSON.stringify({ model: state.model, messages:[ {role:"system",content:system}, {role:"user",content:user} ] })
+    });
+    if(!res.ok){
+      var bodyText = "";
+      try{ bodyText = await res.text(); }catch(e){}
+      throw new Error("HTTP "+res.status+(bodyText ? " – "+bodyText.slice(0,200) : ""));
+    }
+    var data = await res.json();
+    var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    return { content: content || "(leere Antwort)", usage: data.usage };
+  }
+
+  // -- settings panel --
+  var settingsPanel = document.getElementById("settingsPanel");
+  var settingsBtn = document.getElementById("settingsBtn");
+  var presetRow = document.getElementById("presetRow");
+  var presetHint = document.getElementById("presetHint");
+  var baseUrlInput = document.getElementById("baseUrlInput");
+  var apiKeyInput = document.getElementById("apiKeyInput");
+  var modelSelect = document.getElementById("modelSelect");
+  var modelFilter = document.getElementById("modelFilter");
+  var saveNote = document.getElementById("saveNote");
+
+  PRESETS.forEach(function(p){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "preset-btn"; b.textContent = p.label;
+    b.addEventListener("click", function(){
+      state.preset = p.id;
+      baseUrlInput.value = p.baseUrl;
+      presetHint.textContent = p.hint;
+      highlightPreset();
+    });
+    presetRow.appendChild(b);
+  });
+  function highlightPreset(){
+    Array.prototype.forEach.call(presetRow.children, function(btn, i){
+      btn.className = "preset-btn" + (PRESETS[i].id === state.preset ? " active" : "");
+    });
+    var p = PRESETS.filter(function(p){return p.id===state.preset;})[0];
+    if(p) presetHint.textContent = p.hint;
+  }
+
+  function openSettings(open){
+    settingsPanel.hidden = !open;
+    settingsBtn.setAttribute("aria-expanded", String(open));
+  }
+  settingsBtn.addEventListener("click", function(){ openSettings(settingsPanel.hidden); });
+
+  var lastModels = [];
+
+  function populateModelSelect(models, preferredId){
+    lastModels = models;
+    modelSelect.innerHTML = "";
+    if(!models.length){
+      var empty = document.createElement("option");
+      empty.value = ""; empty.textContent = "– keine Modelle gefunden –";
+      modelSelect.appendChild(empty);
+      return;
+    }
+    var ids = models.map(function(m){ return m.id; });
+    if(preferredId && ids.indexOf(preferredId) === -1) ids.unshift(preferredId);
+    ids.forEach(function(id){
+      var opt = document.createElement("option");
+      opt.value = id; opt.textContent = id;
+      modelSelect.appendChild(opt);
+    });
+    modelSelect.value = (preferredId && ids.indexOf(preferredId) !== -1) ? preferredId : ids[0];
+  }
+
+  async function fetchModels(baseUrl, apiKey){
+    var headers = {};
+    if(apiKey) headers["Authorization"] = "Bearer "+apiKey;
+    var res = await fetch(baseUrl.replace(/\/$/,"")+"/v1/models", { headers: headers });
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    var data = await res.json();
+    return data.data || [];
+  }
+
+  document.getElementById("loadModelsBtn").addEventListener("click", async function(){
+    var btn = this; var original = btn.textContent;
+    btn.disabled = true; btn.textContent = "lädt…";
+    try{
+      var models = await fetchModels(baseUrlInput.value, apiKeyInput.value);
+      populateModelSelect(models, state.model);
+      modelFilter.value = "";
+      btn.textContent = models.length + " Modelle gefunden";
+    }catch(e){
+      btn.textContent = "Fehler: "+e.message;
+    }
+    setTimeout(function(){ btn.textContent = original; btn.disabled = false; }, 2200);
+  });
+
+  modelFilter.addEventListener("input", function(){
+    var q = modelFilter.value.trim().toLowerCase();
+    Array.prototype.forEach.call(modelSelect.options, function(opt){
+      opt.hidden = q !== "" && opt.value && opt.value.toLowerCase().indexOf(q) === -1;
+    });
+  });
+
+  document.getElementById("saveSettingsBtn").addEventListener("click", function(){
+    state.baseUrl = baseUrlInput.value.trim();
+    state.apiKey = apiKeyInput.value.trim();
+    state.model = modelSelect.value.trim();
+    saveState();
+    saveNote.hidden = false;
+    setTimeout(function(){ saveNote.hidden = true; }, 2000);
+    checkConnection();
+  });
+
+  // -- skill rack --
+  var skillGrid = document.getElementById("skillGrid");
+  var workspace = document.getElementById("workspace");
+
+  function renderSkillGrid(){
+    skillGrid.innerHTML = "";
+    SKILLS.forEach(function(skill){
+      var card = document.createElement("button");
+      card.type = "button";
+      card.className = "skill-card" + (skill.id === activeSkillId ? " active" : "");
+      card.style.setProperty("--cat", "var(--c-"+skill.cat+")");
+      card.innerHTML = '<span class="channel-badge">'+skill.code+'</span>'+
+        '<span class="skill-name">'+skill.label+'<span class="skill-sub">'+skill.summary+'</span></span>';
+      card.addEventListener("click", function(){ activeSkillId = skill.id; renderSkillGrid(); renderWorkspace(); });
+      skillGrid.appendChild(card);
+    });
+  }
+
+  function getSkill(id){ return SKILLS.filter(function(s){ return s.id===id; })[0]; }
+
+  function renderWorkspace(){
+    var skill = getSkill(activeSkillId);
+    workspace.innerHTML = "";
+
+    var head = document.createElement("div");
+    head.className = "ws-head";
+    head.innerHTML = '<h3>'+skill.label+'</h3><span class="ws-cat" style="--cat:var(--c-'+skill.cat+')">'+CAT_LABEL[skill.cat]+'</span>';
+    workspace.appendChild(head);
+
+    var desc = document.createElement("p");
+    desc.className = "ws-desc"; desc.textContent = skill.summary+".";
+    workspace.appendChild(desc);
+
+    var formFields = document.createElement("div");
+    formFields.className = "form-fields";
+    var values = {};
+    skill.fields.forEach(function(f){
+      values[f.key] = f.example || (f.options ? f.options[0] : "");
+      var wrap = document.createElement("div");
+      wrap.className = "field";
+      var label = document.createElement("label");
+      label.setAttribute("for","field-"+f.key); label.textContent = f.label;
+      wrap.appendChild(label);
+      var input;
+      if(f.type === "textarea"){
+        input = document.createElement("textarea");
+        input.value = f.example || "";
+      } else if(f.type === "select"){
+        input = document.createElement("select");
+        f.options.forEach(function(o){
+          var opt = document.createElement("option"); opt.value=o; opt.textContent=o; input.appendChild(opt);
+        });
+      } else {
+        input = document.createElement("input"); input.type="text"; input.value = f.example || "";
+      }
+      input.id = "field-"+f.key;
+      input.addEventListener("input", function(){ values[f.key] = input.value; });
+      wrap.appendChild(input);
+      formFields.appendChild(wrap);
+    });
+    workspace.appendChild(formFields);
+
+    var actions = document.createElement("div");
+    actions.className = "ws-actions";
+    var runBtn = document.createElement("button");
+    runBtn.className = "btn"; runBtn.type = "button"; runBtn.textContent = "Skill ausführen";
+    actions.appendChild(runBtn);
+    workspace.appendChild(actions);
+
+    var output = document.createElement("div");
+    output.className = "output empty";
+    output.textContent = "Noch keine Ausgabe. Felder oben sind mit Beispielwerten vorausgefüllt – einfach anpassen und ausführen.";
+    workspace.appendChild(output);
+
+    runBtn.addEventListener("click", function(){ runSkill(skill, values, output, runBtn); });
+  }
+
+  async function runSkill(skill, values, output, runBtn){
+    if(!state.baseUrl || !state.model){
+      openSettings(true);
+      addTrace("Abgebrochen: Endpunkt-URL oder Modell fehlt. Bitte Einstellungen ausfüllen.", "err");
+      return;
+    }
+    clearTrace();
+    runBtn.disabled = true;
+    output.className = "output";
+    output.innerHTML = "";
+    setStatus("live", "Anfrage läuft…");
+
+    addTrace('Skill erkannt: "'+skill.label+'"');
+    await delay(220);
+    var sys = skill.system(values);
+    var usr = skill.user(values);
+    addTrace("System-Prompt vorbereitet ("+sys.length+" Zeichen)");
+    await delay(220);
+    addTrace("Anfrage an Modell gesendet → "+state.model);
+
+    try{
+      var result = await callChat(sys, usr);
+      addTrace("Antwort erhalten"+(result.usage ? " ("+result.usage.total_tokens+" Tokens)" : ""));
+      output.innerHTML = renderLite(result.content);
+      setStatus("ok", "verbunden · "+state.model);
+    }catch(e){
+      addTrace("Fehler: "+e.message, "err");
+      output.innerHTML = '<p class="error">Anfrage fehlgeschlagen: '+escapeHtml(e.message)+'</p>';
+      setStatus("err", "Fehler bei letzter Anfrage");
+    }
+    runBtn.disabled = false;
+  }
+
+  // -- init --
+  loadState();
+  baseUrlInput.value = state.baseUrl;
+  apiKeyInput.value = state.apiKey;
+  if(state.model){
+    var preset0 = document.createElement("option");
+    preset0.value = state.model; preset0.textContent = state.model;
+    modelSelect.innerHTML = ""; modelSelect.appendChild(preset0);
+    modelSelect.value = state.model;
+  }
+  highlightPreset();
+  renderSkillGrid();
+  renderWorkspace();
+  if(!state.apiKey || !state.model){ openSettings(true); }
+  checkConnection();
+  if(state.baseUrl && state.apiKey){
+    fetchModels(state.baseUrl, state.apiKey).then(function(models){
+      populateModelSelect(models, state.model);
+    }).catch(function(){});
+  }
+})();
+</script>
+</body>
+</html>
