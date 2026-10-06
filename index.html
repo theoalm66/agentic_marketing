@@ -88,13 +88,26 @@ button{font-family:var(--font-body);cursor:pointer}
 .skills h2{font-size:.85rem;color:var(--fg-dim);font-family:var(--font-mono);letter-spacing:.06em;text-transform:uppercase}
 .skill-grid{display:grid;grid-template-columns:1fr;gap:6px}
 @media (max-width:760px){.skill-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
-.skill-group-label{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.07em;text-transform:uppercase;color:var(--cat,var(--fg-dim));margin:8px 0 -1px;padding-left:2px}
-.skill-group-label:first-child{margin-top:0}
+.skill-group{display:flex;flex-direction:column;gap:6px}
+.skill-group-header{display:flex;align-items:center;gap:6px;background:none;border:none;padding:4px 2px;width:100%;color:var(--cat,var(--fg-dim))}
+.skill-group-header .twisty{font-family:var(--font-mono);width:14px;flex-shrink:0;text-align:center}
+.skill-group-header .label{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.07em;text-transform:uppercase}
+.skill-group-header .count{font-family:var(--font-mono);font-size:.66rem;color:var(--fg-dim);margin-left:auto}
+.skill-badges-row{display:flex;flex-wrap:wrap;gap:6px;padding:0 0 4px 20px}
+.skill-badges-row button{background:none;border:1px solid var(--cat,var(--line));border-radius:6px;padding:0}
+.skill-badges-row .channel-badge{border:none}
 .skill-card{display:flex;align-items:center;gap:10px;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;color:var(--fg)}
 .skill-card.active{border-color:var(--cat,var(--accent));box-shadow:inset 3px 0 0 var(--cat,var(--accent))}
 .channel-badge{font-family:var(--font-mono);font-size:.68rem;font-weight:500;letter-spacing:.04em;color:var(--cat,var(--fg-dim));border:1px solid var(--cat,var(--line));border-radius:6px;padding:3px 6px;flex-shrink:0}
 .skill-name{font-size:.86rem;line-height:1.25;min-width:0}
 .skill-sub{display:block;font-size:.72rem;color:var(--fg-dim);margin-top:1px}
+.skill-add-btn{border:1px dashed var(--line);background:none;color:var(--fg-dim);border-radius:10px;padding:9px 10px;font-size:.82rem;text-align:left}
+.field-row{display:grid;grid-template-columns:1fr 1fr 110px auto;gap:6px;align-items:center}
+@media (max-width:640px){.field-row{grid-template-columns:1fr 1fr}}
+.field-row input,.field-row select{padding:7px 8px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-size:.82rem;min-width:0}
+.field-row .remove-field{background:none;border:none;color:var(--danger);font-size:.85rem;padding:4px 8px}
+.manage-skill-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.manage-skill-list li{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:.84rem}
 
 .workspace{padding:16px;min-width:0;display:flex;flex-direction:column;gap:14px}
 .ws-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
@@ -206,16 +219,56 @@ button{font-family:var(--font-body);cursor:pointer}
       <span class="save-note" id="saveNote" hidden>gespeichert</span>
     </div>
     <p class="hint">Der Key verlässt diesen Browser nur Richtung der eingetragenen Endpunkt-URL. Auf einem gemeinsam genutzten Rechner danach besser wieder löschen.</p>
+    <h2>Daten sichern &amp; übertragen</h2>
+    <p class="hint">Markenprofile, Verbindungseinstellungen, Prompt-Versionen, eigene Skills und die Verlaufs-Historie als eine JSON-Datei sichern – zum Übertragen auf ein anderes Gerät oder einen anderen Browser.</p>
+    <div class="settings-actions">
+      <button class="btn secondary" id="exportBtn" type="button">Alles exportieren (JSON)</button>
+      <button class="btn secondary" id="importBtn" type="button">Datei importieren…</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+      <span class="save-note" id="importNote" hidden></span>
+    </div>
+    <p class="hint">Achtung: Die Export-Datei enthält den API-Key im Klartext. Nicht öffentlich teilen.</p>
   </section>
 
   <main class="layout">
     <aside class="panel skills">
       <h2>Skills</h2>
       <div class="skill-grid" id="skillGrid"></div>
+      <button type="button" class="skill-add-btn" id="newSkillBtn">+ Neuer Skill / Kategorie</button>
     </aside>
 
     <section class="panel workspace" id="workspace"></section>
   </main>
+
+  <section class="panel settings" id="newSkillPanel" hidden>
+    <h2>Neuer Skill</h2>
+    <p class="hint">Ein Skill ist nur eine Rolle (System-Prompt) + ein paar Eingabefelder. Neue Kategorien entstehen einfach durch einen neuen Namen im Feld „Kategorie”.</p>
+    <div class="field-grid">
+      <div class="field"><label for="nsLabel">Skill-Name</label><input id="nsLabel" placeholder="z.B. Pressemitteilung"></div>
+      <div class="field"><label for="nsCode">Kürzel (Badge, max. 4 Zeichen)</label><input id="nsCode" maxlength="4" placeholder="PRM"></div>
+      <div class="field"><label for="nsCategory">Kategorie</label><input id="nsCategory" list="categoryList" placeholder="z.B. PR &amp; Kommunikation"><datalist id="categoryList"></datalist></div>
+      <div class="field"><label for="nsSummary">Kurzbeschreibung</label><input id="nsSummary" placeholder="Kurze Zusammenfassung, erscheint als Untertitel"></div>
+    </div>
+    <label class="hint" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="nsUseBrand" style="width:auto"> Aktives Markenprofil automatisch als Kontext mitschicken</label>
+    <div class="field">
+      <label for="nsSystem">System-Prompt (Rolle des Agenten) – {{feld-schlüssel}} wird ersetzt</label>
+      <textarea id="nsSystem" style="min-height:100px" placeholder="Du bist ..."></textarea>
+    </div>
+    <div class="field">
+      <label>Eingabefelder</label>
+      <div id="nsFieldList" style="display:flex;flex-direction:column;gap:6px"></div>
+      <button type="button" class="btn secondary small" id="nsAddFieldBtn" style="align-self:flex-start;margin-top:6px">+ Feld hinzufügen</button>
+    </div>
+    <div class="settings-actions">
+      <button class="btn" id="nsCreateBtn" type="button">Skill erstellen</button>
+      <button class="btn secondary" id="nsCancelBtn" type="button">Abbrechen</button>
+      <span class="save-note" id="nsSaveNote" hidden>erstellt</span>
+    </div>
+    <div class="field">
+      <label>Eigene Skills verwalten</label>
+      <ul class="manage-skill-list" id="customSkillManageList"></ul>
+    </div>
+  </section>
 
   <section class="panel trace">
     <div class="trace-head">
@@ -384,6 +437,83 @@ button{font-family:var(--font-body);cursor:pointer}
     return lines.join("\n");
   }
 
+  // -- Eigene Skills & Kategorien --
+  var customSkills = [];
+  var customCategories = {}; // key -> { label, colorVar }
+  var CAT_COLOR_CYCLE = ["create","plan","analyze","guard","neutral"];
+  function loadCustomSkills(){
+    try{
+      var raw = localStorage.getItem("kampagnenregie_custom_skills");
+      if(raw) customSkills = JSON.parse(raw);
+    }catch(e){}
+    customSkills.forEach(function(s){
+      s.fields = s.fields || [];
+      s.user = null; // Verdrahtung wird generisch aus den Feldern gebaut
+    });
+  }
+  function saveCustomSkills(){
+    try{ localStorage.setItem("kampagnenregie_custom_skills", JSON.stringify(customSkills.map(function(s){
+      return { id:s.id, cat:s.cat, code:s.code, label:s.label, summary:s.summary, useBrand:!!s.useBrand, fields:s.fields, system:s.system, isCustom:true };
+    }))); }catch(e){}
+  }
+  function loadCustomCategories(){
+    try{
+      var raw = localStorage.getItem("kampagnenregie_custom_categories");
+      if(raw) customCategories = JSON.parse(raw);
+    }catch(e){}
+  }
+  function saveCustomCategories(){
+    try{ localStorage.setItem("kampagnenregie_custom_categories", JSON.stringify(customCategories)); }catch(e){}
+  }
+  function slugifyCategory(label){
+    return "cc_"+label.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+  }
+  function ensureCategory(label){
+    label = label.trim();
+    if(!label) return "neutral";
+    var builtin = CAT_ORDER.filter(function(c){ return CAT_LABEL[c].toLowerCase()===label.toLowerCase() || c===label; })[0];
+    if(builtin) return builtin;
+    var key = slugifyCategory(label);
+    var existing = Object.keys(customCategories).filter(function(k){ return customCategories[k].label.toLowerCase()===label.toLowerCase(); })[0];
+    if(existing) return existing;
+    if(!customCategories[key]){
+      var usedCount = Object.keys(customCategories).length;
+      customCategories[key] = { label: label, colorVar: CAT_COLOR_CYCLE[usedCount % CAT_COLOR_CYCLE.length] };
+      saveCustomCategories();
+    }
+    return key;
+  }
+  function allSkills(){ return SKILLS.concat(customSkills); }
+  function allCategoryKeys(){
+    var keys = CAT_ORDER.slice();
+    Object.keys(customCategories).forEach(function(k){ if(keys.indexOf(k)===-1) keys.push(k); });
+    return keys;
+  }
+  function catLabel(cat){ return CAT_LABEL[cat] || (customCategories[cat] && customCategories[cat].label) || cat; }
+  function catColorExpr(cat){
+    var v = CAT_LABEL[cat] ? cat : (customCategories[cat] ? customCategories[cat].colorVar : "neutral");
+    return "var(--c-"+v+")";
+  }
+  function genericUser(skill, values){
+    return skill.fields.map(function(f){ return f.label+": "+values[f.key]; }).join("\n");
+  }
+
+  // -- Verlaufs-Historie (für Export) --
+  var history = [];
+  function loadHistory(){
+    try{
+      var raw = localStorage.getItem("kampagnenregie_history");
+      if(raw) history = JSON.parse(raw);
+    }catch(e){}
+  }
+  function saveHistory(){
+    try{ localStorage.setItem("kampagnenregie_history", JSON.stringify(history.slice(-50))); }catch(e){}
+  }
+  function addHistory(entry){
+    history.push(entry);
+    saveHistory();
+  }
+
   function escapeHtml(s){
     return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   }
@@ -513,9 +643,9 @@ button{font-family:var(--font-body);cursor:pointer}
   }
 
   function openSettings(open){
+    if(open){ closeAllPanels(); }
     settingsPanel.hidden = !open;
     settingsBtn.setAttribute("aria-expanded", String(open));
-    if(open){ brandPanel.hidden = true; brandBtn.setAttribute("aria-expanded","false"); }
   }
   settingsBtn.addEventListener("click", function(){ openSettings(settingsPanel.hidden); });
 
@@ -591,9 +721,9 @@ button{font-family:var(--font-body);cursor:pointer}
   var brandNoteInput = document.getElementById("brandNoteInput");
 
   function openBrandPanel(open){
+    if(open){ closeAllPanels(); renderBrandList(); fillBrandForm(getActiveBrand()); }
     brandPanel.hidden = !open;
     brandBtn.setAttribute("aria-expanded", String(open));
-    if(open){ settingsPanel.hidden = true; settingsBtn.setAttribute("aria-expanded","false"); renderBrandList(); fillBrandForm(getActiveBrand()); }
   }
   brandBtn.addEventListener("click", function(){ openBrandPanel(brandPanel.hidden); });
 
@@ -733,31 +863,59 @@ button{font-family:var(--font-body);cursor:pointer}
   // -- skill rack --
   var skillGrid = document.getElementById("skillGrid");
   var workspace = document.getElementById("workspace");
+  var categoryOpen = {};
 
   function renderSkillGrid(){
     skillGrid.innerHTML = "";
-    CAT_ORDER.forEach(function(cat){
-      var items = SKILLS.filter(function(s){ return s.cat === cat; });
+    var active = getSkill(activeSkillId);
+    if(active && !(active.cat in categoryOpen)) categoryOpen[active.cat] = true;
+    allCategoryKeys().forEach(function(cat){
+      var items = allSkills().filter(function(s){ return s.cat === cat; });
       if(!items.length) return;
-      var h = document.createElement("div");
-      h.className = "skill-group-label";
-      h.style.setProperty("--cat", "var(--c-"+cat+")");
-      h.textContent = CAT_LABEL[cat];
-      skillGrid.appendChild(h);
-      items.forEach(function(skill){
-        var card = document.createElement("button");
-        card.type = "button";
-        card.className = "skill-card" + (skill.id === activeSkillId ? " active" : "");
-        card.style.setProperty("--cat", "var(--c-"+skill.cat+")");
-        card.innerHTML = '<span class="channel-badge">'+skill.code+'</span>'+
-          '<span class="skill-name">'+skill.label+'<span class="skill-sub">'+skill.summary+'</span></span>';
-        card.addEventListener("click", function(){ activeSkillId = skill.id; renderSkillGrid(); renderWorkspace(); });
-        skillGrid.appendChild(card);
-      });
+      if(!(cat in categoryOpen)) categoryOpen[cat] = false;
+      var open = categoryOpen[cat];
+      var group = document.createElement("div");
+      group.className = "skill-group";
+
+      var header = document.createElement("button");
+      header.type = "button";
+      header.className = "skill-group-header";
+      header.style.setProperty("--cat", catColorExpr(cat));
+      header.innerHTML = '<span class="twisty">'+(open?"−":"+")+'</span><span class="label">'+catLabel(cat)+'</span><span class="count">'+items.length+'</span>';
+      header.addEventListener("click", function(){ categoryOpen[cat] = !categoryOpen[cat]; renderSkillGrid(); });
+      group.appendChild(header);
+
+      if(open){
+        items.forEach(function(skill){
+          var card = document.createElement("button");
+          card.type = "button";
+          card.className = "skill-card" + (skill.id === activeSkillId ? " active" : "");
+          card.style.setProperty("--cat", catColorExpr(skill.cat));
+          card.title = skill.label;
+          card.innerHTML = '<span class="channel-badge">'+skill.code+'</span>'+
+            '<span class="skill-name">'+skill.label+'<span class="skill-sub">'+skill.summary+'</span></span>';
+          card.addEventListener("click", function(){ activeSkillId = skill.id; renderSkillGrid(); renderWorkspace(); });
+          group.appendChild(card);
+        });
+      } else {
+        var row = document.createElement("div");
+        row.className = "skill-badges-row";
+        items.forEach(function(skill){
+          var b = document.createElement("button");
+          b.type = "button";
+          b.title = skill.label + " – " + skill.summary;
+          b.style.setProperty("--cat", catColorExpr(skill.cat));
+          b.innerHTML = '<span class="channel-badge">'+skill.code+'</span>';
+          b.addEventListener("click", function(){ activeSkillId = skill.id; categoryOpen[cat] = true; renderSkillGrid(); renderWorkspace(); });
+          row.appendChild(b);
+        });
+        group.appendChild(row);
+      }
+      skillGrid.appendChild(group);
     });
   }
 
-  function getSkill(id){ return SKILLS.filter(function(s){ return s.id===id; })[0]; }
+  function getSkill(id){ return allSkills().filter(function(s){ return s.id===id; })[0]; }
 
   function renderWorkspace(){
     var skill = getSkill(activeSkillId);
@@ -765,7 +923,7 @@ button{font-family:var(--font-body);cursor:pointer}
 
     var head = document.createElement("div");
     head.className = "ws-head";
-    head.innerHTML = '<h3>'+skill.label+'</h3><span class="ws-cat" style="--cat:var(--c-'+skill.cat+')">'+CAT_LABEL[skill.cat]+'</span>';
+    head.innerHTML = '<h3>'+skill.label+'</h3><span class="ws-cat" style="--cat:'+catColorExpr(skill.cat)+'">'+catLabel(skill.cat)+'</span>';
     workspace.appendChild(head);
 
     var desc = document.createElement("p");
@@ -934,7 +1092,7 @@ button{font-family:var(--font-body);cursor:pointer}
     await delay(220);
     var sysTemplate = editedPrompt != null ? editedPrompt : getEffectiveSystem(skill);
     var sys = renderTemplate(sysTemplate, values);
-    var usr = (ctx ? ctx+"\n\n" : "") + skill.user(values);
+    var usr = (ctx ? ctx+"\n\n" : "") + (skill.user ? skill.user(values) : genericUser(skill, values));
     addTrace("System-Prompt vorbereitet ("+sys.length+" Zeichen)" + (ctx ? " inkl. Markenkontext" : ""));
     await delay(220);
     addTrace("Anfrage an Modell gesendet → "+state.model);
@@ -944,6 +1102,7 @@ button{font-family:var(--font-body);cursor:pointer}
       addTrace("Antwort erhalten"+(result.usage ? " ("+result.usage.total_tokens+" Tokens)" : ""));
       output.innerHTML = renderLite(result.content);
       setStatus("ok", "verbunden · "+state.model);
+      addHistory({ skillId: skill.id, skillLabel: skill.label, values: values, output: result.content, at: fmtDate()+" "+fmtTime() });
     }catch(e){
       addTrace("Fehler: "+e.message, "err");
       output.innerHTML = '<p class="error">Anfrage fehlgeschlagen: '+escapeHtml(e.message)+'</p>';
@@ -952,10 +1111,183 @@ button{font-family:var(--font-body);cursor:pointer}
     runBtn.disabled = false;
   }
 
+  // -- Neuer-Skill-Panel --
+  var newSkillPanel = document.getElementById("newSkillPanel");
+  var newSkillBtn = document.getElementById("newSkillBtn");
+  var nsLabel = document.getElementById("nsLabel");
+  var nsCode = document.getElementById("nsCode");
+  var nsCategory = document.getElementById("nsCategory");
+  var categoryList = document.getElementById("categoryList");
+  var nsSummary = document.getElementById("nsSummary");
+  var nsUseBrand = document.getElementById("nsUseBrand");
+  var nsSystem = document.getElementById("nsSystem");
+  var nsFieldList = document.getElementById("nsFieldList");
+  var nsSaveNote = document.getElementById("nsSaveNote");
+  var customSkillManageList = document.getElementById("customSkillManageList");
+  var draftFields = [];
+
+  function closeAllPanels(){
+    settingsPanel.hidden = true; settingsBtn.setAttribute("aria-expanded","false");
+    brandPanel.hidden = true; brandBtn.setAttribute("aria-expanded","false");
+    newSkillPanel.hidden = true;
+  }
+  function renderDraftFields(){
+    nsFieldList.innerHTML = "";
+    draftFields.forEach(function(f, idx){
+      var row = document.createElement("div");
+      row.className = "field-row";
+      var labelI = document.createElement("input");
+      labelI.placeholder = "Feldbezeichnung (z.B. Thema)"; labelI.value = f.label;
+      labelI.addEventListener("input", function(){ f.label = labelI.value; });
+      var typeS = document.createElement("select");
+      [["text","Text (einzeilig)"],["textarea","Text (mehrzeilig)"],["select","Auswahl"]].forEach(function(o){
+        var opt = document.createElement("option"); opt.value=o[0]; opt.textContent=o[1]; if(f.type===o[0]) opt.selected=true;
+        typeS.appendChild(opt);
+      });
+      typeS.addEventListener("change", function(){ f.type = typeS.value; renderDraftFields(); });
+      var extraI = document.createElement("input");
+      extraI.placeholder = f.type==="select" ? "Optionen, Komma-getrennt" : "Beispielwert";
+      extraI.value = f.type==="select" ? (f.options||"") : (f.example||"");
+      extraI.addEventListener("input", function(){
+        if(f.type==="select") f.options = extraI.value; else f.example = extraI.value;
+      });
+      var removeBtn = document.createElement("button");
+      removeBtn.type="button"; removeBtn.className="remove-field"; removeBtn.textContent="✕";
+      removeBtn.addEventListener("click", function(){ draftFields.splice(idx,1); renderDraftFields(); });
+      row.appendChild(labelI); row.appendChild(typeS); row.appendChild(extraI); row.appendChild(removeBtn);
+      nsFieldList.appendChild(row);
+    });
+  }
+  function slugifyKey(label){
+    return label.trim().toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/(^_|_$)/g,"") || "feld";
+  }
+  function renderCustomSkillManageList(){
+    customSkillManageList.innerHTML = "";
+    if(!customSkills.length){
+      var li = document.createElement("li"); li.textContent = "Noch keine eigenen Skills.";
+      customSkillManageList.appendChild(li); return;
+    }
+    customSkills.forEach(function(s){
+      var li = document.createElement("li");
+      var label = document.createElement("span"); label.textContent = s.code+" · "+s.label+" ("+catLabel(s.cat)+")";
+      var del = document.createElement("button");
+      del.type="button"; del.className="btn secondary small"; del.textContent="Löschen";
+      del.addEventListener("click", function(){
+        customSkills = customSkills.filter(function(x){ return x.id !== s.id; });
+        saveCustomSkills();
+        if(activeSkillId === s.id) activeSkillId = SKILLS[0].id;
+        renderSkillGrid(); renderWorkspace(); renderCustomSkillManageList();
+      });
+      li.appendChild(label); li.appendChild(del);
+      customSkillManageList.appendChild(li);
+    });
+  }
+  function openNewSkillPanel(open){
+    if(open){
+      closeAllPanels();
+      nsLabel.value = ""; nsCode.value = ""; nsCategory.value = ""; nsSummary.value = ""; nsUseBrand.checked = false; nsSystem.value = "";
+      draftFields = [{ label:"", type:"text", example:"" }];
+      renderDraftFields();
+      categoryList.innerHTML = "";
+      allCategoryKeys().forEach(function(c){
+        var opt = document.createElement("option"); opt.value = catLabel(c); categoryList.appendChild(opt);
+      });
+      renderCustomSkillManageList();
+    }
+    newSkillPanel.hidden = !open;
+  }
+  newSkillBtn.addEventListener("click", function(){ openNewSkillPanel(newSkillPanel.hidden); });
+  document.getElementById("nsAddFieldBtn").addEventListener("click", function(){
+    draftFields.push({ label:"", type:"text", example:"" });
+    renderDraftFields();
+  });
+  document.getElementById("nsCancelBtn").addEventListener("click", function(){ openNewSkillPanel(false); });
+  document.getElementById("nsCreateBtn").addEventListener("click", function(){
+    if(!nsLabel.value.trim() || !nsSystem.value.trim()){ (nsLabel.value.trim()?nsSystem:nsLabel).focus(); return; }
+    var cat = ensureCategory(nsCategory.value || "Eigene Skills");
+    var fields = draftFields.filter(function(f){ return f.label.trim(); }).map(function(f){
+      var field = { key: slugifyKey(f.label), label: f.label.trim(), type: f.type };
+      if(f.type==="select"){ field.options = (f.options||"").split(",").map(function(s){return s.trim();}).filter(Boolean); if(!field.options.length) field.options=["Option 1"]; }
+      else { field.example = f.example || ""; }
+      return field;
+    });
+    var skill = {
+      id: "cs"+Date.now(),
+      cat: cat,
+      code: (nsCode.value.trim() || nsLabel.value.trim().slice(0,3)).toUpperCase().slice(0,4),
+      label: nsLabel.value.trim(),
+      summary: nsSummary.value.trim() || "Eigener Skill",
+      useBrand: nsUseBrand.checked,
+      fields: fields,
+      system: nsSystem.value,
+      isCustom: true,
+      user: null
+    };
+    customSkills.push(skill);
+    saveCustomSkills();
+    categoryOpen[cat] = true;
+    activeSkillId = skill.id;
+    nsSaveNote.hidden = false;
+    setTimeout(function(){ nsSaveNote.hidden = true; }, 2000);
+    draftFields = [{ label:"", type:"text", example:"" }];
+    nsLabel.value=""; nsCode.value=""; nsSummary.value=""; nsSystem.value=""; nsUseBrand.checked=false;
+    renderDraftFields();
+    renderCustomSkillManageList();
+    renderSkillGrid();
+    renderWorkspace();
+  });
+
+  // -- Export / Import --
+  document.getElementById("exportBtn").addEventListener("click", function(){
+    var bundle = {
+      exportedAt: new Date().toISOString(),
+      formatVersion: 1,
+      config: state,
+      brands: brandState,
+      skillVersions: skillVersions,
+      customSkills: JSON.parse(localStorage.getItem("kampagnenregie_custom_skills") || "[]"),
+      customCategories: customCategories,
+      history: history
+    };
+    var blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "kampagnenregie-export-"+fmtDate()+".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  });
+  var importNote = document.getElementById("importNote");
+  document.getElementById("importBtn").addEventListener("click", function(){ document.getElementById("importFile").click(); });
+  document.getElementById("importFile").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var data = JSON.parse(reader.result);
+        if(data.config) localStorage.setItem("kampagnenregie_config", JSON.stringify(data.config));
+        if(data.brands) localStorage.setItem("kampagnenregie_brands", JSON.stringify(data.brands));
+        if(data.skillVersions) localStorage.setItem("kampagnenregie_skill_versions", JSON.stringify(data.skillVersions));
+        if(data.customSkills) localStorage.setItem("kampagnenregie_custom_skills", JSON.stringify(data.customSkills));
+        if(data.customCategories) localStorage.setItem("kampagnenregie_custom_categories", JSON.stringify(data.customCategories));
+        if(data.history) localStorage.setItem("kampagnenregie_history", JSON.stringify(data.history));
+        importNote.hidden = false; importNote.textContent = "Importiert – Seite wird neu geladen…";
+        setTimeout(function(){ location.reload(); }, 1200);
+      }catch(err){
+        importNote.hidden = false; importNote.textContent = "Fehler beim Import: "+err.message;
+        setTimeout(function(){ importNote.hidden = true; }, 3000);
+      }
+    };
+    reader.readAsText(file);
+  });
+
   // -- init --
   loadState();
   loadBrands();
   loadSkillVersions();
+  loadCustomCategories();
+  loadCustomSkills();
+  loadHistory();
   if(!brandState.activeId && brandState.brands.length) brandState.activeId = brandState.brands[0].id;
   baseUrlInput.value = state.baseUrl;
   apiKeyInput.value = state.apiKey;
