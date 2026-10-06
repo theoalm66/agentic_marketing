@@ -109,6 +109,30 @@ button{font-family:var(--font-body);cursor:pointer}
 .manage-skill-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .manage-skill-list li{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:.84rem}
 
+.flow-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.flow-list li{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--panel-2)}
+.flow-list .flow-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:500}
+.flow-list .flow-summary{color:var(--fg-dim);font-size:.82rem}
+.flow-list .flow-steps-preview{display:flex;gap:6px;flex-wrap:wrap}
+.flow-list .flow-actions{display:flex;gap:8px;margin-top:2px}
+.flow-step-chips{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.flow-step-chips li{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:.84rem;background:var(--panel-2)}
+.flow-step-chips li .num{font-family:var(--font-mono);color:var(--fg-dim);width:1.4em}
+.flow-step-chips li .name{flex:1;min-width:0}
+.flow-step-chips li button{background:none;border:none;color:var(--fg-dim);padding:2px 6px;font-size:.9rem}
+.flow-step-chips li button.remove{color:var(--danger)}
+
+.flow-header{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.flow-steps{display:flex;flex-direction:column;gap:10px}
+.flow-step{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.flow-step.pending{opacity:.55}
+.flow-step.current{border-color:var(--accent)}
+.flow-step.done{border-color:var(--good)}
+.flow-step-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flow-step-head .num{font-family:var(--font-mono);font-size:.78rem;color:var(--fg-dim);border:1px solid var(--line);border-radius:999px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.flow-step.done .num{background:var(--good);color:var(--panel);border-color:var(--good)}
+.flow-step-status{font-family:var(--font-mono);font-size:.7rem;color:var(--fg-dim);margin-left:auto}
+
 .workspace{padding:16px;min-width:0;display:flex;flex-direction:column;gap:14px}
 .ws-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .ws-head h3{font-size:1.15rem}
@@ -153,10 +177,39 @@ button{font-family:var(--font-body);cursor:pointer}
     </div>
     <div class="topbar-actions">
       <span class="status-text" id="statusText">nicht verbunden</span>
+      <button class="icon-btn text" id="flowsBtn" aria-label="Flows" aria-expanded="false">FLOWS</button>
       <button class="icon-btn text" id="brandBtn" aria-label="Markenprofil" aria-expanded="false">MARKE</button>
       <button class="icon-btn" id="settingsBtn" aria-label="Einstellungen" aria-expanded="false">⚙</button>
     </div>
   </header>
+
+  <section class="panel settings" id="flowsPanel" hidden>
+    <h2>Flows</h2>
+    <p class="hint">Ein Flow verkettet mehrere Skills: Jeder Schritt läuft nacheinander, und das Ergebnis der vorherigen Schritte wird dem nächsten automatisch als Kontext mitgegeben.</p>
+    <ul class="flow-list" id="flowList"></ul>
+    <button type="button" class="skill-add-btn" id="newFlowBtn" style="margin-top:4px">+ Neuer Flow</button>
+  </section>
+
+  <section class="panel settings" id="flowBuilderPanel" hidden>
+    <h2>Neuer Flow</h2>
+    <div class="field-grid">
+      <div class="field"><label for="nfLabel">Flow-Name</label><input id="nfLabel" placeholder="z.B. Content → Kanäle"></div>
+      <div class="field"><label for="nfSummary">Kurzbeschreibung</label><input id="nfSummary" placeholder="Was macht dieser Flow?"></div>
+    </div>
+    <div class="field">
+      <label for="nfSkillPicker">Skill hinzufügen</label>
+      <div class="inline-add">
+        <select id="nfSkillPicker"></select>
+        <button class="btn secondary" type="button" id="nfAddStepBtn">Hinzufügen</button>
+      </div>
+    </div>
+    <ol class="flow-step-chips" id="nfStepChips"></ol>
+    <div class="settings-actions">
+      <button class="btn" id="nfCreateBtn" type="button">Flow speichern</button>
+      <button class="btn secondary" id="nfCancelBtn" type="button">Abbrechen</button>
+      <span class="save-note" id="nfSaveNote" hidden>gespeichert</span>
+    </div>
+  </section>
 
   <section class="panel settings" id="brandPanel" hidden>
     <h2>Markenprofil</h2>
@@ -501,6 +554,29 @@ button{font-family:var(--font-body);cursor:pointer}
   function genericUser(skill, values){
     return skill.fields.map(function(f){ return f.label+": "+values[f.key]; }).join("\n");
   }
+
+  // -- Flows (verkettete Skills) --
+  var FLOWS = [
+    { id:"flow_content_channels", label:"Content → Kanäle", summary:"Erst einen Social-Media-Post entwerfen, danach direkt die Kanalstrategie dafür schärfen.", steps:["post","channels"] },
+    { id:"flow_seo_pipeline", label:"SEO-Pipeline", summary:"Keyword-Chancen finden und sofort einen Content-Brief dafür bauen.", steps:["keywords","brief"] },
+    { id:"flow_strategy", label:"Strategie-Fundament", summary:"Positionierung, Persona und Kanalaudit zu einem 90-Tage-Plan verdichten.", steps:["positioning","personas","channels","playbook"] }
+  ];
+  var customFlows = [];
+  function loadCustomFlows(){
+    try{
+      var raw = localStorage.getItem("kampagnenregie_custom_flows");
+      if(raw) customFlows = JSON.parse(raw);
+    }catch(e){}
+  }
+  function saveCustomFlows(){
+    try{ localStorage.setItem("kampagnenregie_custom_flows", JSON.stringify(customFlows)); }catch(e){}
+  }
+  function allFlows(){ return FLOWS.concat(customFlows); }
+  function getFlow(id){ return allFlows().filter(function(f){ return f.id===id; })[0]; }
+
+  var activeFlowId = null;
+  var flowStepValues = [];
+  var flowOutputs = [];
 
   // -- Verlaufs-Historie (für Export) --
   var history = [];
@@ -898,7 +974,7 @@ button{font-family:var(--font-body);cursor:pointer}
           card.title = skill.label;
           card.innerHTML = '<span class="channel-badge">'+skill.code+'</span>'+
             '<span class="skill-name">'+skill.label+'<span class="skill-sub">'+skill.summary+'</span></span>';
-          card.addEventListener("click", function(){ activeSkillId = skill.id; renderSkillGrid(); renderWorkspace(); });
+          card.addEventListener("click", function(){ activeFlowId = null; activeSkillId = skill.id; renderSkillGrid(); renderWorkspace(); });
           group.appendChild(card);
         });
       } else {
@@ -910,7 +986,7 @@ button{font-family:var(--font-body);cursor:pointer}
           b.title = skill.label + " – " + skill.summary;
           b.style.setProperty("--cat", catColorExpr(skill.cat));
           b.innerHTML = '<span class="channel-badge">'+skill.code+'</span>';
-          b.addEventListener("click", function(){ activeSkillId = skill.id; categoryOpen[cat] = true; renderSkillGrid(); renderWorkspace(); });
+          b.addEventListener("click", function(){ activeFlowId = null; activeSkillId = skill.id; categoryOpen[cat] = true; renderSkillGrid(); renderWorkspace(); });
           row.appendChild(b);
         });
         group.appendChild(row);
@@ -922,6 +998,7 @@ button{font-family:var(--font-body);cursor:pointer}
   function getSkill(id){ return allSkills().filter(function(s){ return s.id===id; })[0]; }
 
   function renderWorkspace(){
+    if(activeFlowId){ renderFlowWorkspace(getFlow(activeFlowId)); return; }
     var skill = getSkill(activeSkillId);
     workspace.innerHTML = "";
 
@@ -1115,6 +1192,291 @@ button{font-family:var(--font-body);cursor:pointer}
     runBtn.disabled = false;
   }
 
+  // -- Flows: Panel, Builder, Runner --
+  var flowsPanel = document.getElementById("flowsPanel");
+  var flowsBtn = document.getElementById("flowsBtn");
+  var flowList = document.getElementById("flowList");
+  var flowBuilderPanel = document.getElementById("flowBuilderPanel");
+  var nfLabel = document.getElementById("nfLabel");
+  var nfSummary = document.getElementById("nfSummary");
+  var nfSkillPicker = document.getElementById("nfSkillPicker");
+  var nfStepChips = document.getElementById("nfStepChips");
+  var nfSaveNote = document.getElementById("nfSaveNote");
+  var draftFlowSteps = [];
+
+  function openFlowsPanel(open){
+    if(open){ closeAllPanels(); renderFlowsList(); }
+    flowsPanel.hidden = !open;
+    flowsBtn.setAttribute("aria-expanded", String(open));
+  }
+  flowsBtn.addEventListener("click", function(){ openFlowsPanel(flowsPanel.hidden); });
+
+  function renderFlowsList(){
+    flowList.innerHTML = "";
+    allFlows().forEach(function(flow){
+      var li = document.createElement("li");
+      var title = document.createElement("div");
+      title.className = "flow-title";
+      var name = document.createElement("span"); name.textContent = flow.label;
+      title.appendChild(name);
+      if(flow.isCustom){
+        var del = document.createElement("button");
+        del.type="button"; del.className="btn secondary small"; del.textContent="Löschen";
+        del.addEventListener("click", function(){
+          customFlows = customFlows.filter(function(f){ return f.id !== flow.id; });
+          saveCustomFlows();
+          if(activeFlowId===flow.id) exitFlow();
+          renderFlowsList();
+        });
+        title.appendChild(del);
+      }
+      li.appendChild(title);
+      var summary = document.createElement("div"); summary.className="flow-summary"; summary.textContent = flow.summary || "";
+      li.appendChild(summary);
+      var preview = document.createElement("div"); preview.className="flow-steps-preview";
+      flow.steps.forEach(function(sid, i){
+        var sk = getSkill(sid);
+        var badge = document.createElement("span");
+        badge.className = "channel-badge";
+        badge.style.setProperty("--cat", sk ? catColorExpr(sk.cat) : "var(--c-neutral)");
+        badge.title = sk ? sk.label : sid;
+        badge.textContent = (i>0?"→ ":"") + (sk ? sk.code : "?");
+        preview.appendChild(badge);
+      });
+      li.appendChild(preview);
+      var actions = document.createElement("div"); actions.className="flow-actions";
+      var startBtn = document.createElement("button");
+      startBtn.type="button"; startBtn.className="btn small"; startBtn.textContent="Flow starten";
+      startBtn.addEventListener("click", function(){ startFlow(flow); openFlowsPanel(false); });
+      actions.appendChild(startBtn);
+      li.appendChild(actions);
+      flowList.appendChild(li);
+    });
+  }
+
+  function populateSkillPicker(){
+    nfSkillPicker.innerHTML = "";
+    allCategoryKeys().forEach(function(cat){
+      var items = allSkills().filter(function(s){ return s.cat===cat; });
+      if(!items.length) return;
+      var group = document.createElement("optgroup");
+      group.label = catLabel(cat);
+      items.forEach(function(s){
+        var opt = document.createElement("option"); opt.value = s.id; opt.textContent = s.code+" · "+s.label;
+        group.appendChild(opt);
+      });
+      nfSkillPicker.appendChild(group);
+    });
+  }
+  function renderFlowStepChips(){
+    nfStepChips.innerHTML = "";
+    draftFlowSteps.forEach(function(sid, idx){
+      var sk = getSkill(sid);
+      var li = document.createElement("li");
+      var num = document.createElement("span"); num.className="num"; num.textContent = (idx+1)+".";
+      var name = document.createElement("span"); name.className="name"; name.textContent = sk ? (sk.code+" · "+sk.label) : sid;
+      li.appendChild(num); li.appendChild(name);
+      if(idx>0){
+        var up = document.createElement("button"); up.type="button"; up.textContent="↑";
+        up.addEventListener("click", function(){ var t=draftFlowSteps[idx-1]; draftFlowSteps[idx-1]=draftFlowSteps[idx]; draftFlowSteps[idx]=t; renderFlowStepChips(); });
+        li.appendChild(up);
+      }
+      if(idx<draftFlowSteps.length-1){
+        var down = document.createElement("button"); down.type="button"; down.textContent="↓";
+        down.addEventListener("click", function(){ var t=draftFlowSteps[idx+1]; draftFlowSteps[idx+1]=draftFlowSteps[idx]; draftFlowSteps[idx]=t; renderFlowStepChips(); });
+        li.appendChild(down);
+      }
+      var rm = document.createElement("button"); rm.type="button"; rm.className="remove"; rm.textContent="✕";
+      rm.addEventListener("click", function(){ draftFlowSteps.splice(idx,1); renderFlowStepChips(); });
+      li.appendChild(rm);
+      nfStepChips.appendChild(li);
+    });
+  }
+  function openFlowBuilder(open){
+    if(open){
+      closeAllPanels();
+      nfLabel.value = ""; nfSummary.value = "";
+      draftFlowSteps = [];
+      populateSkillPicker();
+      renderFlowStepChips();
+    }
+    flowBuilderPanel.hidden = !open;
+  }
+  document.getElementById("newFlowBtn").addEventListener("click", function(){ openFlowBuilder(true); });
+  document.getElementById("nfCancelBtn").addEventListener("click", function(){ openFlowBuilder(false); openFlowsPanel(true); });
+  document.getElementById("nfAddStepBtn").addEventListener("click", function(){
+    if(!nfSkillPicker.value) return;
+    draftFlowSteps.push(nfSkillPicker.value);
+    renderFlowStepChips();
+  });
+  document.getElementById("nfCreateBtn").addEventListener("click", function(){
+    if(!nfLabel.value.trim() || draftFlowSteps.length < 2){
+      nfLabel.focus();
+      return;
+    }
+    var flow = { id:"cf"+Date.now(), label:nfLabel.value.trim(), summary:nfSummary.value.trim(), steps:draftFlowSteps.slice(), isCustom:true };
+    customFlows.push(flow);
+    saveCustomFlows();
+    nfSaveNote.hidden = false;
+    setTimeout(function(){ nfSaveNote.hidden = true; }, 1500);
+    openFlowBuilder(false);
+    openFlowsPanel(true);
+  });
+
+  function startFlow(flow){
+    activeFlowId = flow.id;
+    flowOutputs = flow.steps.map(function(){ return null; });
+    flowStepValues = flow.steps.map(function(sid){
+      var sk = getSkill(sid);
+      var v = {};
+      (sk ? sk.fields : []).forEach(function(f){ v[f.key] = f.example || (f.options ? f.options[0] : ""); });
+      return v;
+    });
+    renderSkillGrid();
+    renderWorkspace();
+  }
+  function exitFlow(){
+    activeFlowId = null;
+    renderSkillGrid();
+    renderWorkspace();
+  }
+
+  function renderFlowWorkspace(flow){
+    workspace.innerHTML = "";
+    var header = document.createElement("div");
+    header.className = "flow-header";
+    header.innerHTML = '<h3>'+flow.label+'</h3>';
+    var exitBtn = document.createElement("button");
+    exitBtn.type="button"; exitBtn.className="btn secondary small"; exitBtn.textContent="Flow verlassen";
+    exitBtn.addEventListener("click", exitFlow);
+    header.appendChild(exitBtn);
+    workspace.appendChild(header);
+
+    var desc = document.createElement("p"); desc.className="ws-desc"; desc.textContent = flow.summary || "";
+    workspace.appendChild(desc);
+
+    var stepsEl = document.createElement("div");
+    stepsEl.className = "flow-steps";
+
+    var firstPendingIndex = flowOutputs.findIndex(function(o){ return o==null; });
+
+    flow.steps.forEach(function(skillId, i){
+      var skill = getSkill(skillId);
+      if(!skill) return;
+      var isDone = flowOutputs[i] != null;
+      var isCurrent = i === firstPendingIndex;
+      var isPending = !isDone && !isCurrent;
+
+      var stepDiv = document.createElement("div");
+      stepDiv.className = "flow-step " + (isDone ? "done" : isCurrent ? "current" : "pending");
+
+      var head = document.createElement("div");
+      head.className = "flow-step-head";
+      var num = document.createElement("span"); num.className="num"; num.textContent = isDone ? "✓" : String(i+1);
+      head.appendChild(num);
+      var badge = document.createElement("span"); badge.className="channel-badge"; badge.style.setProperty("--cat", catColorExpr(skill.cat)); badge.textContent = skill.code;
+      head.appendChild(badge);
+      var name = document.createElement("strong"); name.textContent = skill.label;
+      head.appendChild(name);
+      var status = document.createElement("span"); status.className="flow-step-status";
+      status.textContent = isDone ? "erledigt" : isCurrent ? "aktueller Schritt" : "wartet";
+      head.appendChild(status);
+      stepDiv.appendChild(head);
+
+      if(isPending){
+        stepsEl.appendChild(stepDiv);
+        return;
+      }
+
+      var values = flowStepValues[i];
+      var formFields = document.createElement("div");
+      formFields.className = "form-fields";
+      skill.fields.forEach(function(f){
+        var wrap = document.createElement("div");
+        wrap.className = "field";
+        var label = document.createElement("label"); label.textContent = f.label;
+        wrap.appendChild(label);
+        var input;
+        if(f.type === "textarea"){ input = document.createElement("textarea"); input.value = values[f.key] || ""; }
+        else if(f.type === "select"){
+          input = document.createElement("select");
+          f.options.forEach(function(o){ var opt=document.createElement("option"); opt.value=o; opt.textContent=o; if(values[f.key]===o) opt.selected=true; input.appendChild(opt); });
+        } else { input = document.createElement("input"); input.type="text"; input.value = values[f.key] || ""; }
+        input.disabled = isDone;
+        input.addEventListener("input", function(){ values[f.key] = input.value; });
+        wrap.appendChild(input);
+        formFields.appendChild(wrap);
+      });
+      stepDiv.appendChild(formFields);
+
+      var actions = document.createElement("div"); actions.className="ws-actions";
+      var runBtn = document.createElement("button");
+      runBtn.type="button"; runBtn.className="btn small";
+      runBtn.textContent = isDone ? "Erneut ausführen" : "Schritt ausführen";
+      actions.appendChild(runBtn);
+      stepDiv.appendChild(actions);
+
+      var output = document.createElement("div");
+      output.className = isDone ? "output" : "output empty";
+      output.innerHTML = isDone ? renderLite(flowOutputs[i]) : "Noch keine Ausgabe für diesen Schritt.";
+      stepDiv.appendChild(output);
+
+      runBtn.addEventListener("click", function(){ runFlowStep(flow, i, values, output, runBtn); });
+      stepsEl.appendChild(stepDiv);
+    });
+
+    workspace.appendChild(stepsEl);
+  }
+
+  async function runFlowStep(flow, i, values, output, runBtn){
+    var skill = getSkill(flow.steps[i]);
+    if(!state.baseUrl || !state.model){
+      openSettings(true);
+      addTrace("Abgebrochen: Endpunkt-URL oder Modell fehlt.", "err");
+      return;
+    }
+    var brandCtx = null;
+    if(skill.useBrand){
+      brandCtx = brandContextText();
+      if(!brandCtx){
+        openBrandPanel(true);
+        addTrace("Abgebrochen: Kein aktives Markenprofil.", "err");
+        return;
+      }
+    }
+    clearTrace();
+    runBtn.disabled = true;
+    setStatus("live", "Flow-Schritt läuft…");
+    addTrace('Flow "'+flow.label+'" · Schritt '+(i+1)+': "'+skill.label+'"');
+    await delay(200);
+
+    var priorSteps = flow.steps.slice(0, i).map(function(sid, idx){
+      var sk = getSkill(sid);
+      return "### "+(sk?sk.label:sid)+"\n"+flowOutputs[idx];
+    }).filter(function(_, idx){ return flowOutputs[idx] != null; });
+    var flowCtx = priorSteps.length ? "BISHERIGE SCHRITTE DIESES FLOWS:\n"+priorSteps.join("\n\n") : null;
+
+    var sys = renderTemplate(getEffectiveSystem(skill), values);
+    var usr = (brandCtx ? brandCtx+"\n\n" : "") + (flowCtx ? flowCtx+"\n\n" : "") + (skill.user ? skill.user(values) : genericUser(skill, values));
+    addTrace("System-Prompt vorbereitet ("+sys.length+" Zeichen)" + (flowCtx ? " inkl. vorheriger Flow-Schritte" : ""));
+    await delay(200);
+    addTrace("Anfrage an Modell gesendet → "+state.model);
+
+    try{
+      var result = await callChat(sys, usr);
+      addTrace("Antwort erhalten"+(result.usage ? " ("+result.usage.total_tokens+" Tokens)" : ""));
+      flowOutputs[i] = result.content;
+      setStatus("ok", "verbunden · "+state.model);
+      addHistory({ skillId: skill.id, skillLabel: skill.label+" (Flow: "+flow.label+")", values: values, output: result.content, at: fmtDate()+" "+fmtTime() });
+      renderFlowWorkspace(flow);
+    }catch(e){
+      addTrace("Fehler: "+e.message, "err");
+      output.innerHTML = '<p class="error">Anfrage fehlgeschlagen: '+escapeHtml(e.message)+'</p>';
+      setStatus("err", "Fehler bei letzter Anfrage");
+      runBtn.disabled = false;
+    }
+  }
+
   // -- Neuer-Skill-Panel --
   var newSkillPanel = document.getElementById("newSkillPanel");
   var newSkillBtn = document.getElementById("newSkillBtn");
@@ -1134,6 +1496,8 @@ button{font-family:var(--font-body);cursor:pointer}
     settingsPanel.hidden = true; settingsBtn.setAttribute("aria-expanded","false");
     brandPanel.hidden = true; brandBtn.setAttribute("aria-expanded","false");
     newSkillPanel.hidden = true;
+    flowsPanel.hidden = true; flowsBtn.setAttribute("aria-expanded","false");
+    flowBuilderPanel.hidden = true;
   }
   function renderDraftFields(){
     nsFieldList.innerHTML = "";
@@ -1251,6 +1615,7 @@ button{font-family:var(--font-body);cursor:pointer}
       skillVersions: skillVersions,
       customSkills: JSON.parse(localStorage.getItem("kampagnenregie_custom_skills") || "[]"),
       customCategories: customCategories,
+      customFlows: customFlows,
       history: history
     };
     var blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
@@ -1274,6 +1639,7 @@ button{font-family:var(--font-body);cursor:pointer}
         if(data.skillVersions) localStorage.setItem("kampagnenregie_skill_versions", JSON.stringify(data.skillVersions));
         if(data.customSkills) localStorage.setItem("kampagnenregie_custom_skills", JSON.stringify(data.customSkills));
         if(data.customCategories) localStorage.setItem("kampagnenregie_custom_categories", JSON.stringify(data.customCategories));
+        if(data.customFlows) localStorage.setItem("kampagnenregie_custom_flows", JSON.stringify(data.customFlows));
         if(data.history) localStorage.setItem("kampagnenregie_history", JSON.stringify(data.history));
         importNote.hidden = false; importNote.textContent = "Importiert – Seite wird neu geladen…";
         setTimeout(function(){ location.reload(); }, 1200);
@@ -1291,6 +1657,7 @@ button{font-family:var(--font-body);cursor:pointer}
   loadSkillVersions();
   loadCustomCategories();
   loadCustomSkills();
+  loadCustomFlows();
   loadHistory();
   if(!brandState.activeId && brandState.brands.length) brandState.activeId = brandState.brands[0].id;
   baseUrlInput.value = state.baseUrl;
